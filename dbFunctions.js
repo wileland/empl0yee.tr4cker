@@ -1,3 +1,6 @@
+const mysql = require('mysql2');
+
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -8,149 +11,164 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// Function to view all departments
-const viewDepartments = async () => {
-  const connection = await dbConfig.getConnection();
+
+// Function to obtain a database connection
+async function getConnection() {
+  return pool.promise().getConnection();
+}
+
+// Function to view departments
+async function viewDepartments(connection) {
   try {
     const [rows] = await connection.query('SELECT * FROM department ORDER BY id');
-    return rows;
+    console.table(rows);
+  } catch (error) {
+    console.error('Error viewing departments:', error);
   } finally {
-    connection.release();
+    connection.release(); // Release the connection back to the pool
   }
-};
+}
 
-// Function to view all roles
-const viewRoles = async () => {
-  const connection = await dbConfig.getConnection();
+// Function to view roles
+async function viewRoles(connection) {
   try {
-    const [rows] = await connection.query('SELECT * FROM role ORDER BY id');
-    return rows;
+    const query = `
+      SELECT role.id, role.title, department.name AS department, role.salary 
+      FROM role 
+      INNER JOIN department ON role.department_id = department.id
+      ORDER BY role.id
+    `;
+    const [rows] = await connection.query(query);
+    console.table(rows);
+  } catch (error) {
+    console.error('Error viewing roles:', error);
   } finally {
     connection.release();
   }
-};
+}
 
-// Function to view all employees
-const viewEmployees = async () => {
-  const connection = await dbConfig.getConnection();
+// Function to get managers
+async function getManagers(connection) {
   try {
-    const [rows] = await connection.query('SELECT * FROM employee ORDER BY id');
+    const [rows] = await connection.query('SELECT * FROM managers');
     return rows;
+  } catch (error) {
+    console.error('Error getting managers:', error);
+    return [];
   } finally {
     connection.release();
   }
-};
+}
+
+// Function to get employees managed by a manager
+async function getEmployeesByManager(managerId, connection) {
+  try {
+    const query = 'SELECT * FROM employees WHERE manager_id = ?';
+    const [rows] = await connection.query(query, [managerId]);
+    return rows;
+  } catch (error) {
+    console.error('Error getting employees by manager:', error);
+    return [];
+  } finally {
+    connection.release();
+  }
+}
 
 // Function to add a department
-const addDepartment = async (name) => {
-  const connection = await dbConfig.getConnection();
+async function addDepartment(departmentName, connection) {
   try {
-    const [results] = await connection.query('INSERT INTO department (name) VALUES (?)', [name]);
-    return results.insertId; // Return the ID of the newly inserted department
+    const query = 'INSERT INTO department (name) VALUES (?)';
+    await connection.query(query, [departmentName]);
+    console.log('Department added successfully.');
+  } catch (error) {
+    console.error('Error adding department:', error);
   } finally {
     connection.release();
   }
-};
+}
 
 // Function to add a role
-const addRole = async (title, salary, departmentId) => {
-  const connection = await dbConfig.getConnection();
+async function addRole(title, salary, departmentId, connection) {
   try {
-    const [results] = await connection.query('INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)', [title, salary, departmentId]);
-    return results.insertId; // Return the ID of the newly inserted role
+    const query = 'INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)';
+    await connection.query(query, [title, salary, departmentId]);
+    console.log('Role added successfully.');
+  } catch (error) {
+    console.error('Error adding role:', error);
   } finally {
     connection.release();
   }
-};
+}
 
 // Function to add an employee
-const addEmployee = async (firstName, lastName, roleId, managerId) => {
-  const connection = await dbConfig.getConnection();
+async function addEmployee(firstName, lastName, roleId, managerId, connection) {
   try {
-    const [results] = await connection.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)', [firstName, lastName, roleId, managerId]);
-    return results.insertId; // Return the ID of the newly inserted employee
+    const query = 'INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)';
+    await connection.query(query, [firstName, lastName, roleId, managerId]);
+    console.log('Employee added successfully.');
+  } catch (error) {
+    console.error('Error adding employee:', error);
   } finally {
     connection.release();
   }
-};
+}
 
-// Function to update a department's name
-const updateDepartment = async (id, newName) => {
-  const connection = await dbConfig.getConnection();
+// Function to update an employee's role
+async function updateEmployeeRole(employeeId, roleId, connection) {
   try {
-    const [results] = await connection.query('UPDATE department SET name = ? WHERE id = ?', [newName, id]);
-    return results.affectedRows > 0; // Return true if the update was successful
+    const query = 'UPDATE employees SET role_id = ? WHERE id = ?';
+    await connection.query(query, [roleId, employeeId]);
+    console.log('Employee role updated successfully.');
+  } catch (error) {
+    console.error('Error updating employee\'s role:', error);
   } finally {
     connection.release();
   }
-};
-
-// Function to update a role's details
-const updateRole = async (id, newTitle, newSalary, newDepartmentId) => {
-  const connection = await dbConfig.getConnection();
-  try {
-    const [results] = await connection.query('UPDATE role SET title = ?, salary = ?, department_id = ? WHERE id = ?', [newTitle, newSalary, newDepartmentId, id]);
-    return results.affectedRows > 0; // Return true if the update was successful
-  } finally {
-    connection.release();
-  }
-};
-
-// Function to update an employee's details (first name, last name, or manager)
-const updateEmployee = async (id, newFirstName, newLastName, newRoleId, newManagerId) => {
-  const connection = await dbConfig.getConnection();
-  try {
-    const [results] = await connection.query('UPDATE employee SET first_name = ?, last_name = ?, role_id = ?, manager_id = ? WHERE id = ?', [newFirstName, newLastName, newRoleId, newManagerId, id]);
-    return results.affectedRows > 0; // Return true if the update was successful
-  } finally {
-    connection.release();
-  }
-};
-
-// Function to delete a department
-const deleteDepartment = async (id) => {
-  const connection = await dbConfig.getConnection();
-  try {
-    const [results] = await connection.query('DELETE FROM department WHERE id = ?', [id]);
-    return results.affectedRows > 0; // Return true if the delete was successful
-  } finally {
-    connection.release();
-  }
-};
-
-// Function to delete a role
-const deleteRole = async (id) => {
-  const connection = await dbConfig.getConnection();
-  try {
-    const [results] = await connection.query('DELETE FROM role WHERE id = ?', [id]);
-    return results.affectedRows > 0; // Return true if the delete was successful
-  } finally {
-    connection.release();
-  }
-};
+}
 
 // Function to delete an employee
-const deleteEmployee = async (id) => {
-  const connection = await dbConfig.getConnection();
+async function deleteEmployee(employeeId, connection) {
   try {
-    const [results] = await connection.query('DELETE FROM employee WHERE id = ?', [id]);
-    return results.affectedRows > 0; // Return true if the delete was successful
+    const query = 'DELETE FROM employees WHERE id = ?';
+    await connection.query(query, [employeeId]);
+    console.log('Employee deleted successfully.');
+  } catch (error) {
+    console.error('Error deleting employee:', error);
   } finally {
     connection.release();
   }
-};
+}
+
+// Function to update an employee's details
+async function updateEmployeeDetails(employeeId, firstName, lastName, connection) {
+  try {
+    const query = 'UPDATE employees SET first_name = ?, last_name = ? WHERE id = ?';
+    await connection.query(query, [firstName, lastName, employeeId]);
+    console.log('Employee details updated successfully.');
+  } catch (error) {
+    console.error('Error updating employee\'s details:', error);
+  } finally {
+    connection.release();
+  }
+}
+
+// Function to close the database connection
+function closeConnection(connection) {
+  connection.release();
+  console.log('Database connection closed. Goodbye!');
+}
 
 module.exports = {
+  getConnection,
   viewDepartments,
   viewRoles,
-  viewEmployees,
+  getManagers,
+  getEmployeesByManager,
   addDepartment,
   addRole,
   addEmployee,
-  updateDepartment,
-  updateRole,
-  updateEmployee,
-  deleteDepartment,
-  deleteRole,
+  updateEmployeeRole,
   deleteEmployee,
+  updateEmployeeDetails,
+  closeConnection,
 };

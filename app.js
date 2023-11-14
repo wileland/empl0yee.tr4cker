@@ -1,7 +1,18 @@
-// Import required modules
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 const dbFunctions = require('./dbFunctions'); // Import your database functions
+require('dotenv').config();
+const mysql = require('mysql2');
+
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
 // Main function to start the application
 async function main() {
@@ -12,14 +23,13 @@ async function main() {
     // Run the employee tracker application
     await runEmployeeTracker(connection);
   } catch (error) {
-    console.error('Error obtaining database connection:', error);
+    console.error('Error obtaining a database connection:', error);
   }
 }
 
-// Run the employee tracker application
+// Main application loop
 async function runEmployeeTracker(connection) {
   try {
-    // Main application loop
     const answer = await inquirer.prompt([
       {
         type: 'list',
@@ -35,6 +45,8 @@ async function runEmployeeTracker(connection) {
           'Update an employee\'s role',
           'Delete an employee',
           'Update an employee\'s details',
+          'View employees by manager', // New menu option
+          'View employees by department', // New menu option
           'Exit'
         ]
       }
@@ -50,6 +62,12 @@ async function runEmployeeTracker(connection) {
         break;
       case 'View all employees':
         await viewEmployees(connection);
+        break;
+      case 'View employees by manager':
+        await viewEmployeesByManager(connection);
+        break;
+      case 'View employees by department':
+        await viewEmployeesByDepartment(connection);
         break;
       case 'Add a department':
         await addDepartment(connection);
@@ -110,20 +128,36 @@ async function viewRoles(connection) {
   }
 }
 
-// Function to view employees
-async function viewEmployees(connection) {
+// Function to view employees by manager
+async function viewEmployeesByManager(connection) {
   try {
-    const query = `SELECT e.id, e.first_name, e.last_name, role.title, department.name AS department, role.salary, 
-                  CONCAT(m.first_name, ' ', m.last_name) AS manager 
-                  FROM employee e 
-                  LEFT JOIN role ON e.role_id = role.id 
-                  LEFT JOIN department ON role.department_id = department.id 
-                  LEFT JOIN employee m ON m.id = e.manager_id
-                  ORDER BY e.id`;
-    const [rows] = await connection.query(query);
-    console.table(rows);
+    const managers = await dbFunctions.getManagers(connection);
+    const managerChoices = managers.map(m => ({ name: `${m.first_name} ${m.last_name}`, value: m.id }));
+    const { managerId } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'managerId',
+        message: 'Select a manager to view their employees:',
+        choices: managerChoices
+      }
+    ]);
+
+    const employees = await dbFunctions.getEmployeesByManager(managerId, connection);
+    console.table(employees);
   } catch (error) {
-    console.error('Error viewing employees:', error);
+    console.error('Error viewing employees by manager:', error);
+  } finally {
+    await runEmployeeTracker(connection);
+  }
+}
+
+// Function to view employees by department (you can implement this similarly to viewEmployeesByManager)
+async function viewEmployeesByDepartment(connection) {
+  try {
+    // Implement this function to view employees by department
+    // ...
+  } catch (error) {
+    console.error('Error viewing employees by department:', error);
   } finally {
     await runEmployeeTracker(connection);
   }
@@ -292,7 +326,7 @@ async function updateEmployeeDetails(connection) {
       {
         type: 'list',
         name: 'employeeId',
-        message: 'Which employee\'s details would you like to update?',
+        message: 'Select the employee whose details you want to update:',
         choices: employeeChoices
       }
     ]);
@@ -332,17 +366,3 @@ async function closeConnection(connection) {
 
 // Start the application by calling the main function
 main();
-// 1. Update Employee's Details
-// Add a new inquirer prompt to get employee ID, new first name, and new last name.
-// Call a function in dbFunctions.js to update the employee's details.
-
-// 2. View Employees by Manager
-// Add a new menu option to view employees by manager.
-// Prompt the user to select a manager (you can list managers from the database).
-// Query the database to retrieve employees managed by the selected manager.
-// Display the list of employees.
-
-// 3. Clean Command-Line Interface
-// Organize inquirer prompts logically.
-// Add descriptions and validation to prompts.
-// Provide error handling and informative error messages.
