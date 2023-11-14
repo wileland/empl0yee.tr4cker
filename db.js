@@ -12,6 +12,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
+
 // A function to get a connection from the pool
 const getConnection = async () => {
   return await pool.getConnection();

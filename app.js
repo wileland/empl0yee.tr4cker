@@ -332,3 +332,17 @@ async function closeConnection(connection) {
 
 // Start the application by calling the main function
 main();
+// 1. Update Employee's Details
+// Add a new inquirer prompt to get employee ID, new first name, and new last name.
+// Call a function in dbFunctions.js to update the employee's details.
+
+// 2. View Employees by Manager
+// Add a new menu option to view employees by manager.
+// Prompt the user to select a manager (you can list managers from the database).
+// Query the database to retrieve employees managed by the selected manager.
+// Display the list of employees.
+
+// 3. Clean Command-Line Interface
+// Organize inquirer prompts logically.
+// Add descriptions and validation to prompts.
+// Provide error handling and informative error messages.
