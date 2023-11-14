@@ -4,6 +4,7 @@ const cTable = require('console.table');
 const express = require('express');
 const mysql = require('mysql2');
 const dbFunctions = require('./dbFunctions'); // Ensure this module has all the required functions
+const db = require('./queries'); // Adjust the path as needed
 
 // Set up the MySQL connection pool
 const pool = mysql.createPool({
@@ -21,6 +22,11 @@ const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
+
+// Function to obtain a database connection
+async function getConnection() {
+  return pool.promise().getConnection();
+}
 
 // Function to start the CLI application
 async function runEmployeeTracker(connection) {
@@ -54,25 +60,6 @@ async function runEmployeeTracker(connection) {
     }
   }
   await closeConnection(connection); // Close connection when the user decides to exit
-}
-
-// Function to obtain a database connection
-async function getConnection() {
-  return pool.promise().getConnection();
-}
-
-// Function to start the application
-async function main() {
-  try {
-    const connection = await getConnection();
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-    await runEmployeeTracker(connection);
-  } catch (error) {
-    console.error('Error starting the application:', error);
-    pool.end();
-  }
 }
 
 // Express API routes
@@ -154,7 +141,38 @@ app.delete('/api/employees/:id', async (req, res) => {
   }
 });
 
-// ... include other routes as needed for update and delete operations ...
+// Create routes for creating departments, roles, and employees
+app.post('/api/departments', async (req, res) => {
+  // Implement the logic to create a new department
+  try {
+    // Your code to create a new department goes here
+    res.send('Department created successfully');
+  } catch (error) {
+    res.status(500).send('Server Error');
+  }
+});
+
+app.post('/api/roles', async (req, res) => {
+  // Implement the logic to create a new role
+  try {
+    // Your code to create a new role goes here
+    res.send('Role created successfully');
+  } catch (error) {
+    res.status(500).send('Server Error');
+  }
+});
+
+app.post('/api/employees', async (req, res) => {
+  // Implement the logic to create a new employee
+  try {
+    // Your code to create a new employee goes here
+    res.send('Employee created successfully');
+  } catch (error) {
+    res.status(500).send('Server Error');
+  }
+});
+
+// ... Include other routes as needed for create operations ...
 
 // Function to close the database connection
 async function closeConnection(connection) {
@@ -166,8 +184,7 @@ async function closeConnection(connection) {
   }
 }
 
-main();
-
+// Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\nGracefully shutting down...');
   await pool.end();
@@ -176,3 +193,22 @@ process.on('SIGINT', async () => {
     process.exit(0);
   });
 });
+
+// Main function to start the application
+async function main() {
+  try {
+    const connection = await db.pool.getConnection();
+
+    // Run the CLI application
+    await runEmployeeTracker(connection);
+
+    // Start the Express server
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Error obtaining database connection:', error);
+  }
+}
+
+main().catch(console.error);
