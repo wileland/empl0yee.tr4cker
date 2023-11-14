@@ -2,14 +2,13 @@ require('dotenv').config();
 
 // Import required modules
 const inquirer = require('inquirer');
-const mysql = require('mysql2/promise'); // Use mysql2/promise for async queries
 const cTable = require('console.table');
-const dbConfig = require('./config/dbConfig'); // Create a separate configuration file
+const { pool } = require('./config/dbConfig');
+const Department = require('./lib/Department');
+const Employee = require('./lib/Employee');
+const Role = require('./lib/Role');
 
-// Create a connection pool to the database
-const pool = mysql.createPool(dbConfig);
-
-// Function to start the Employee Tracker application
+async function runEmployeeTracker() {
 async function runEmployeeTracker(connection) {
   try {
     // Get a connection from the pool
@@ -123,24 +122,110 @@ async function viewEmployees(connection) {
 }
 
 // Function to add a department
-async function addDepartment(connection) {
+// Function to add a department using the Department class
+async function addDepartment() {
   try {
     const answer = await inquirer.prompt([
       {
-        name: 'newDepartment',
+        name: 'name',
         type: 'input',
         message: 'What is the name of the new department?'
       }
     ]);
 
-    await connection.query('INSERT INTO department SET ?', {
-      name: answer.newDepartment
-    });
-
-    console.log(`Added ${answer.newDepartment} to departments.`);
-    runEmployeeTracker(connection);
+    const departmentId = await Department.addDepartment(answer.name);
+    console.log(`Added new department with ID: ${departmentId}`);
+    runEmployeeTracker();
   } catch (error) {
     console.error('Error:', error);
-    closeConnection(connection);
+    await pool.end();
   }
 }
+
+// Function to add a role using the Role class
+async function addRole() {
+  try {
+    const departments = await Department.getDepartments();
+    const departmentChoices = departments.map((dept) => ({
+      name: dept.name,
+      value: dept.id
+    }));
+
+    const answers = await inquirer.prompt([
+      {
+        name: 'title',
+        type: 'input',
+        message: 'What is the title of the new role?'
+      },
+      {
+        name: 'salary',
+        type: 'input',
+        message: 'What is the salary of the new role?',
+        validate: (value) => !isNaN(value) || 'Please enter a number'
+      },
+      {
+        name: 'departmentId',
+        type: 'list',
+        message: 'Which department does this role belong to?',
+        choices: departmentChoices
+      }
+    ]);
+
+    const roleId = await Role.addRole(answers.title, answers.salary, answers.departmentId);
+    console.log(`Added new role with ID: ${roleId}`);
+    runEmployeeTracker();
+  } catch (error) {
+    console.error('Error:', error);
+    await pool.end();
+  }
+}
+
+// Function to add an employee using the Employee class
+async function addEmployee() {
+  try {
+    const roles = await Role.getRoles();
+    const roleChoices = roles.map((role) => ({
+      name: role.title,
+      value: role.id
+    }));
+
+    const answers = await inquirer.prompt([
+      {
+        name: 'firstName',
+        type: 'input',
+        message: 'What is the first name of the employee?'
+      },
+      {
+        name: 'lastName',
+        type: 'input',
+        message: 'What is the last name of the employee?'
+      },
+      {
+        name: 'roleId',
+        type: 'list',
+        message: 'What is the role of the employee?',
+        choices: roleChoices
+      },
+      // If needed, add another prompt for selecting the manager
+    ]);
+
+    const employeeId = await Employee.addEmployee(answers.firstName, answers.lastName, answers.roleId, null); // Assuming no manager for now
+    console.log(`Added new employee with ID: ${employeeId}`);
+    runEmployeeTracker();
+  } catch (error) {
+    console.error('Error:', error);
+    await pool.end();
+  }
+}
+
+// Ensure to implement the other operations in a similar manner using their respective classes.
+
+// Start the application
+runEmployeeTracker();
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('\nGracefully shutting down...');
+  await pool.end();
+  process.exit(0);
+});
