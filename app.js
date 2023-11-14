@@ -1,3 +1,4 @@
+// Import the necessary modules and functions
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 const dbFunctions = require('./dbFunctions'); // Import your database functions
