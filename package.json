@@ -2,10 +2,10 @@
   "name": "empl0yee-tr4cker",
   "version": "1.0.0",
   "description": "Employee Tracker Application",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "start": "node app.js",
+    "dev": "nodemon app.js",
     "test": "NODE_ENV=test jest"
   },
   "author": "Your Name",
