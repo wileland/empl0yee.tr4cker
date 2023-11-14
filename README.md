@@ -1,4 +1,4 @@
-# Employee Tracker App
+# Empl0yee Tr4cker App
 
 ## Table of Contents
 1. [Description](#1-description)
@@ -10,17 +10,17 @@
 7. [License](#7-license)
 
 ## 1. Description
-The Employee Tracker App is a command-line application built using Node.js, Inquirer, and MySQL2. It allows business owners to manage their company's employee database. Users can view and manage departments, roles, and employees, helping them organize and plan their business.
+The empl0yee tr4cker App is a command-line application built using Node.js, Inquirer, and MySQL2. It allows business owners to manage their company's employee database. Users can view and manage departments, roles, and employees, helping them organize and plan their business.
 
 ## 2. Installation
 To run the Employee Tracker App, follow these steps:
 1. Clone the repository to your local machine.
 2. Navigate to the project directory using the terminal.
 3. Install the required dependencies using the following command:
-npm install
+    npm install
 4. Create a MySQL database and configure the connection details in `config/dbConfig.js`.
 5. Run the application using the following command:
-node index.js
+    node index.js
 
 ## 3. Usage
 Once the application is running, you can use it to perform various tasks related to managing employee data, such as viewing departments, roles, and employees, adding new departments, roles, and employees, and updating employee roles.
