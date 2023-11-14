@@ -1,369 +1,178 @@
-// Import the necessary modules and functions
+require('dotenv').config();
 const inquirer = require('inquirer');
 const cTable = require('console.table');
-const dbFunctions = require('./dbFunctions'); // Import your database functions
-require('dotenv').config();
+const express = require('express');
 const mysql = require('mysql2');
+const dbFunctions = require('./dbFunctions'); // Ensure this module has all the required functions
 
+// Set up the MySQL connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
 });
 
-// Main function to start the application
-async function main() {
-  try {
-    // Obtain a database connection
-    const connection = await dbFunctions.getConnection();
+const app = express();
+app.use(express.json());
 
-    // Run the employee tracker application
-    await runEmployeeTracker(connection);
-  } catch (error) {
-    console.error('Error obtaining a database connection:', error);
-  }
-}
+const PORT = process.env.PORT || 3000;
 
-// Main application loop
+// Function to start the CLI application
 async function runEmployeeTracker(connection) {
-  try {
-    const answer = await inquirer.prompt([
+  // Your CLI application logic goes here
+  let exitLoop = false;
+  while (!exitLoop) {
+    // Use inquirer to get the user's action choice
+    const { action } = await inquirer.prompt([
       {
         type: 'list',
         name: 'action',
         message: 'What would you like to do?',
         choices: [
           'View all departments',
-          'View all roles',
-          'View all employees',
-          'Add a department',
-          'Add a role',
-          'Add an employee',
-          'Update an employee\'s role',
-          'Delete an employee',
-          'Update an employee\'s details',
-          'View employees by manager', // New menu option
-          'View employees by department', // New menu option
-          'Exit'
-        ]
-      }
+          // Add all other actions here
+          'Exit',
+        ],
+      },
     ]);
 
-    // Call the appropriate function based on the user's choice
-    switch (answer.action) {
+    switch (action) {
+      // Match the case with the user's choice and call the respective dbFunctions
       case 'View all departments':
-        await viewDepartments(connection);
+        const departments = await dbFunctions.viewDepartments(connection);
+        console.table(departments);
         break;
-      case 'View all roles':
-        await viewRoles(connection);
-        break;
-      case 'View all employees':
-        await viewEmployees(connection);
-        break;
-      case 'View employees by manager':
-        await viewEmployeesByManager(connection);
-        break;
-      case 'View employees by department':
-        await viewEmployeesByDepartment(connection);
-        break;
-      case 'Add a department':
-        await addDepartment(connection);
-        break;
-      case 'Add a role':
-        await addRole(connection);
-        break;
-      case 'Add an employee':
-        await addEmployee(connection);
-        break;
-      case 'Update an employee\'s role':
-        await updateEmployeeRole(connection);
-        break;
-      case 'Delete an employee':
-        await deleteEmployee(connection);
-        break;
-      case 'Update an employee\'s details':
-        await updateEmployeeDetails(connection);
-        break;
+      // Add cases for all other actions here
       case 'Exit':
-        await closeConnection(connection);
-        return; // Exit the application
-      default:
-        console.log(`Invalid action: ${answer.action}`);
-        await closeConnection(connection);
+        exitLoop = true;
+        break;
     }
-  } catch (error) {
-    console.error('Error:', error);
-    await closeConnection(connection);
   }
+  await closeConnection(connection); // Close connection when the user decides to exit
 }
 
-// Function to view departments
-async function viewDepartments(connection) {
+// Function to obtain a database connection
+async function getConnection() {
+  return pool.promise().getConnection();
+}
+
+// Function to start the application
+async function main() {
   try {
-    const [rows] = await connection.query('SELECT * FROM department ORDER BY id');
-    console.table(rows);
-  } catch (error) {
-    console.error('Error viewing departments:', error);
-  } finally {
+    const connection = await getConnection();
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
     await runEmployeeTracker(connection);
+  } catch (error) {
+    console.error('Error starting the application:', error);
+    pool.end();
   }
 }
 
-// Function to view roles
-async function viewRoles(connection) {
+// Express API routes
+app.get('/api/departments', async (req, res) => {
+  const connection = await getConnection();
   try {
-    const query = `SELECT role.id, role.title, department.name AS department, role.salary 
-                  FROM role 
-                  INNER JOIN department ON role.department_id = department.id
-                  ORDER BY role.id`;
-    const [rows] = await connection.query(query);
-    console.table(rows);
+    const departments = await dbFunctions.viewDepartments(connection);
+    res.json(departments);
   } catch (error) {
-    console.error('Error viewing roles:', error);
+    res.status(500).send('Server Error');
   } finally {
-    await runEmployeeTracker(connection);
+    connection.release();
   }
-}
+});
 
-// Function to view employees by manager
-async function viewEmployeesByManager(connection) {
+// Additional Express routes
+app.get('/api/roles', async (req, res) => {
+  const connection = await getConnection();
   try {
-    const managers = await dbFunctions.getManagers(connection);
-    const managerChoices = managers.map(m => ({ name: `${m.first_name} ${m.last_name}`, value: m.id }));
-    const { managerId } = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'managerId',
-        message: 'Select a manager to view their employees:',
-        choices: managerChoices
-      }
-    ]);
-
-    const employees = await dbFunctions.getEmployeesByManager(managerId, connection);
-    console.table(employees);
+    const roles = await dbFunctions.viewRoles(connection);
+    res.json(roles);
   } catch (error) {
-    console.error('Error viewing employees by manager:', error);
+    res.status(500).send('Server Error');
   } finally {
-    await runEmployeeTracker(connection);
+    connection.release();
   }
-}
+});
 
-// Function to view employees by department (you can implement this similarly to viewEmployeesByManager)
-async function viewEmployeesByDepartment(connection) {
+app.get('/api/employees', async (req, res) => {
+  const connection = await getConnection();
   try {
-    // Implement this function to view employees by department
-    // ...
+    const employees = await dbFunctions.viewEmployees(connection);
+    res.json(employees);
   } catch (error) {
-    console.error('Error viewing employees by department:', error);
+    res.status(500).send('Server Error');
   } finally {
-    await runEmployeeTracker(connection);
+    connection.release();
   }
-}
+});
 
-// Function to add a department
-async function addDepartment(connection) {
+app.put('/api/employees/:id/role', async (req, res) => {
+  const { id } = req.params;
+  const { roleId } = req.body; // Expecting { roleId: newRoleId }
+  const connection = await getConnection();
   try {
-    const { departmentName } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'departmentName',
-        message: 'Enter the name of the new department:',
-      },
-    ]);
-
-    await dbFunctions.addDepartment(departmentName, connection);
-    console.log('Department added successfully.');
+    await dbFunctions.updateEmployeeRole(id, roleId, connection);
+    res.send('Employee role updated successfully');
   } catch (error) {
-    console.error('Error adding department:', error);
+    res.status(500).send('Server Error');
   } finally {
-    await runEmployeeTracker(connection);
+    connection.release();
   }
-}
+});
 
-// Function to add a role
-async function addRole(connection) {
+app.put('/api/employees/:id', async (req, res) => {
+  const { id } = req.params;
+  const { firstName, lastName, managerId } = req.body;
+  const connection = await getConnection();
   try {
-    const { title, salary, departmentId } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'title',
-        message: 'Enter the title of the new role:',
-      },
-      {
-        type: 'number',
-        name: 'salary',
-        message: 'Enter the salary for the new role:',
-      },
-      {
-        type: 'number',
-        name: 'departmentId',
-        message: 'Enter the department ID for the new role:',
-      },
-    ]);
-
-    await dbFunctions.addRole(title, salary, departmentId, connection);
-    console.log('Role added successfully.');
+    await dbFunctions.updateEmployeeDetails(id, firstName, lastName, managerId, connection);
+    res.send('Employee details updated successfully');
   } catch (error) {
-    console.error('Error adding role:', error);
+    res.status(500).send('Server Error');
   } finally {
-    await runEmployeeTracker(connection);
+    connection.release();
   }
-}
+});
 
-// Function to add an employee
-async function addEmployee(connection) {
+app.delete('/api/employees/:id', async (req, res) => {
+  const { id } = req.params;
+  const connection = await getConnection();
   try {
-    const { firstName, lastName, roleId, managerId } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'firstName',
-        message: 'Enter the first name of the new employee:',
-      },
-      {
-        type: 'input',
-        name: 'lastName',
-        message: 'Enter the last name of the new employee:',
-      },
-      {
-        type: 'number',
-        name: 'roleId',
-        message: 'Enter the role ID for the new employee:',
-      },
-      {
-        type: 'number',
-        name: 'managerId',
-        message: 'Enter the manager ID for the new employee (if any, or leave blank):',
-      },
-    ]);
-
-    await dbFunctions.addEmployee(firstName, lastName, roleId, managerId, connection);
-    console.log('Employee added successfully.');
+    await dbFunctions.deleteEmployee(id, connection);
+    res.send('Employee deleted successfully');
   } catch (error) {
-    console.error('Error adding employee:', error);
+    res.status(500).send('Server Error');
   } finally {
-    await runEmployeeTracker(connection);
+    connection.release();
   }
-}
+});
 
-// Function to update an employee's role
-async function updateEmployeeRole(connection) {
-  try {
-    // Fetch all employees and roles to display as choices
-    const employees = await dbFunctions.getEmployees(connection);
-    const roles = await dbFunctions.getRoles(connection);
+// ... include other routes as needed for update and delete operations ...
 
-    // Map the employees and roles to choices for inquirer prompts
-    const employeeChoices = employees.map(e => ({ name: `${e.first_name} ${e.last_name}`, value: e.id }));
-    const roleChoices = roles.map(r => ({ name: r.title, value: r.id }));
-
-    // Prompt user for which employee and what new role
-    const { employeeId, roleId } = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'employeeId',
-        message: 'Which employee\'s role would you like to update?',
-        choices: employeeChoices
-      },
-      {
-        type: 'list',
-        name: 'roleId',
-        message: 'Which role do you want to assign to the employee?',
-        choices: roleChoices
-      }
-    ]);
-
-    await dbFunctions.updateEmployeeRole(employeeId, roleId, connection);
-    console.log('Employee role updated successfully.');
-  } catch (error) {
-    console.error('Error updating employee\'s role:', error);
-  } finally {
-    await runEmployeeTracker(connection);
-  }
-}
-
-// Function to delete an employee
-async function deleteEmployee(connection) {
-  try {
-    // Fetch all employees to display as choices
-    const employees = await dbFunctions.getEmployees(connection);
-
-    // Map the employees to choices for inquirer prompts
-    const employeeChoices = employees.map(e => ({ name: `${e.first_name} ${e.last_name}`, value: e.id }));
-
-    // Prompt user for which employee to delete
-    const { employeeId } = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'employeeId',
-        message: 'Which employee would you like to delete?',
-        choices: employeeChoices
-      }
-    ]);
-
-    await dbFunctions.deleteEmployee(employeeId, connection);
-    console.log('Employee deleted successfully.');
-  } catch (error) {
-    console.error('Error deleting employee:', error);
-  } finally {
-    await runEmployeeTracker(connection);
-  }
-}
-
-// Function to update an employee's details
-async function updateEmployeeDetails(connection) {
-  try {
-    // Fetch all employees to display as choices
-    const employees = await dbFunctions.getEmployees(connection);
-
-    // Map the employees to choices for inquirer prompts
-    const employeeChoices = employees.map(e => ({ name: `${e.first_name} ${e.last_name}`, value: e.id }));
-
-    // Prompt user for which employee to update
-    const { employeeId } = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'employeeId',
-        message: 'Select the employee whose details you want to update:',
-        choices: employeeChoices
-      }
-    ]);
-
-    // Prompt user for updated first name and last name
-    const { firstName, lastName } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'firstName',
-        message: 'Enter the updated first name:',
-      },
-      {
-        type: 'input',
-        name: 'lastName',
-        message: 'Enter the updated last name:',
-      }
-    ]);
-
-    await dbFunctions.updateEmployeeDetails(employeeId, firstName, lastName, connection);
-    console.log('Employee details updated successfully.');
-  } catch (error) {
-    console.error('Error updating employee\'s details:', error);
-  } finally {
-    await runEmployeeTracker(connection);
-  }
-}
-
-// Function to close the database connection and exit the application
+// Function to close the database connection
 async function closeConnection(connection) {
   try {
-    await connection.end();
-    console.log('Database connection closed. Goodbye!');
+    await connection.release();
+    console.log('Connection released and database pool is still active.');
   } catch (error) {
-    console.error('Error closing database connection:', error);
+    console.error('Error releasing the connection:', error);
   }
 }
 
-// Start the application by calling the main function
 main();
+
+process.on('SIGINT', async () => {
+  console.log('\nGracefully shutting down...');
+  await pool.end();
+  app.close(() => {
+    console.log('Express server terminated');
+    process.exit(0);
+  });
+});

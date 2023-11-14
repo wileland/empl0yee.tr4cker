@@ -1,6 +1,5 @@
 const mysql = require('mysql2');
 
-
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -11,13 +10,10 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-
-// Function to obtain a database connection
 async function getConnection() {
   return pool.promise().getConnection();
 }
 
-// Function to view departments
 async function viewDepartments(connection) {
   try {
     const [rows] = await connection.query('SELECT * FROM department ORDER BY id');
@@ -25,11 +21,10 @@ async function viewDepartments(connection) {
   } catch (error) {
     console.error('Error viewing departments:', error);
   } finally {
-    connection.release(); // Release the connection back to the pool
+    connection.release();
   }
 }
 
-// Function to view roles
 async function viewRoles(connection) {
   try {
     const query = `
@@ -47,10 +42,14 @@ async function viewRoles(connection) {
   }
 }
 
-// Function to get managers
 async function getManagers(connection) {
   try {
-    const [rows] = await connection.query('SELECT * FROM managers');
+    // Adjusted to select managers based on the employees table logic
+    const [rows] = await connection.query(`
+      SELECT DISTINCT m.id, m.first_name, m.last_name
+      FROM employees e
+      INNER JOIN employees m ON e.manager_id = m.id
+    `);
     return rows;
   } catch (error) {
     console.error('Error getting managers:', error);
@@ -60,7 +59,6 @@ async function getManagers(connection) {
   }
 }
 
-// Function to get employees managed by a manager
 async function getEmployeesByManager(managerId, connection) {
   try {
     const query = 'SELECT * FROM employees WHERE manager_id = ?';
@@ -74,7 +72,6 @@ async function getEmployeesByManager(managerId, connection) {
   }
 }
 
-// Function to add a department
 async function addDepartment(departmentName, connection) {
   try {
     const query = 'INSERT INTO department (name) VALUES (?)';
@@ -87,7 +84,6 @@ async function addDepartment(departmentName, connection) {
   }
 }
 
-// Function to add a role
 async function addRole(title, salary, departmentId, connection) {
   try {
     const query = 'INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)';
@@ -100,7 +96,6 @@ async function addRole(title, salary, departmentId, connection) {
   }
 }
 
-// Function to add an employee
 async function addEmployee(firstName, lastName, roleId, managerId, connection) {
   try {
     const query = 'INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)';
@@ -113,7 +108,6 @@ async function addEmployee(firstName, lastName, roleId, managerId, connection) {
   }
 }
 
-// Function to update an employee's role
 async function updateEmployeeRole(employeeId, roleId, connection) {
   try {
     const query = 'UPDATE employees SET role_id = ? WHERE id = ?';
@@ -126,7 +120,6 @@ async function updateEmployeeRole(employeeId, roleId, connection) {
   }
 }
 
-// Function to delete an employee
 async function deleteEmployee(employeeId, connection) {
   try {
     const query = 'DELETE FROM employees WHERE id = ?';
@@ -139,11 +132,10 @@ async function deleteEmployee(employeeId, connection) {
   }
 }
 
-// Function to update an employee's details
-async function updateEmployeeDetails(employeeId, firstName, lastName, connection) {
+async function updateEmployeeDetails(employeeId, firstName, lastName, managerId, connection) {
   try {
-    const query = 'UPDATE employees SET first_name = ?, last_name = ? WHERE id = ?';
-    await connection.query(query, [firstName, lastName, employeeId]);
+    const query = 'UPDATE employees SET first_name = ?, last_name = ?, manager_id = ? WHERE id = ?';
+    await connection.query(query, [firstName, lastName, managerId, employeeId]);
     console.log('Employee details updated successfully.');
   } catch (error) {
     console.error('Error updating employee\'s details:', error);
@@ -152,10 +144,11 @@ async function updateEmployeeDetails(employeeId, firstName, lastName, connection
   }
 }
 
-// Function to close the database connection
 function closeConnection(connection) {
-  connection.release();
-  console.log('Database connection closed. Goodbye!');
+  if (connection) {
+    connection.release();
+    console.log('Database connection closed.');
+  }
 }
 
 module.exports = {
