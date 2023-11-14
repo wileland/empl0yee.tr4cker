@@ -1,21 +1,6 @@
 {
   "name": "empl0yee-tr4cker",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "inquirer": "^8.2.4",
-    "mysql2": "^3.6.3"
-  }
-}
-{
-  "name": "empl0yee-tr4cker",
-  "version": "1.0.0",
   "description": "Employee Tracker Application",
   "main": "index.js",
   "scripts": {
@@ -29,7 +14,7 @@
     "inquirer": "^8.2.4",
     "mysql2": "^3.6.3"
   },
-  "devDependencies": { 
+  "devDependencies": {
     "nodemon": "^2.0.15"
   }
 }
