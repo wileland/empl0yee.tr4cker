@@ -1,4 +1,4 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise'); // Use 'mysql2/promise' for async/await support
 
 const dbConfig = {
   host: 'localhost',
@@ -7,30 +7,25 @@ const dbConfig = {
   database: 'empl0yee_tr4cker_db',
 };
 
-const pool = mysql.createPool(dbConfig);
-
-const connect = async () => {
-  return new Promise((resolve, reject) => {
-    pool.getConnection((err, connection) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(connection);
-      }
-    });
-  });
+// Function to create a database connection pool
+const createPool = () => {
+  return mysql.createPool(dbConfig);
 };
 
-const close = (connection) => {
-  return new Promise((resolve, reject) => {
-    connection.release();
-    resolve();
-  });
+// Function to get a connection from the pool
+const getConnection = async () => {
+  const pool = createPool();
+  return pool.getConnection();
+};
+
+// Function to close a connection
+const closeConnection = (connection) => {
+  connection.release();
 };
 
 // Function to reset the database
 const resetDatabase = async () => {
-  const connection = await connect();
+  const connection = await getConnection();
   
   // Define SQL queries to clear or reinitialize tables
   const clearTableQueries = [
@@ -47,28 +42,25 @@ const resetDatabase = async () => {
     // Optionally, you can add code here to reinitialize data if needed
 
     // Close the connection after resetting the database
-    await close(connection);
+    closeConnection(connection);
   } catch (error) {
     console.error('Error resetting the database:', error);
   }
 };
 
 // Helper function to execute SQL queries
-const executeQuery = (connection, query) => {
-  return new Promise((resolve, reject) => {
-    connection.query(query, (err, results) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(results);
-      }
-    });
-  });
+const executeQuery = async (connection, query) => {
+  try {
+    const [results] = await connection.query(query);
+    return results;
+  } catch (error) {
+    throw error;
+  }
 };
 
 module.exports = {
-  connect,
-  close,
-  resetDatabase, // Export the resetDatabase function
-  // Other exports if needed
+  getConnection,
+  closeConnection,
+  resetDatabase,
+  // Add other exports if needed
 };
