@@ -59,7 +59,7 @@ describe('Employee Tracker Tests', () => {
 
     inquirer.prompt.mockResolvedValueOnce(employeeInfo);
 
-    await addEmployee();
+    await addEmployee(employeeInfo);
 
     const employees = await viewEmployees();
 
@@ -82,7 +82,7 @@ describe('Employee Tracker Tests', () => {
 
     inquirer.prompt.mockResolvedValueOnce(newRole);
 
-    await addRole();
+    await addRole(newRole);
 
     const roles = await viewRoles();
 
