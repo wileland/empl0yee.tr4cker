@@ -1,5 +1,6 @@
-const mysql = require('mysql2/promise'); // Use 'mysql2/promise' for async/await support
+const mysql = require('mysql2/promise');
 
+// Database configuration
 const dbConfig = {
   host: 'localhost',
   user: 'root',
@@ -7,25 +8,42 @@ const dbConfig = {
   database: 'empl0yee_tr4cker_db',
 };
 
-// Function to create a database connection pool
-const createPool = () => {
-  return mysql.createPool(dbConfig);
+
+// Create a connection pool to the database
+const pool = mysql.createPool(dbConfig);
+
+/**
+ * Establishes a database connection.
+ * @returns {Promise<Connection>} A Promise that resolves to a database connection.
+ */
+const connect = async () => {
+  try {
+    const connection = await pool.getConnection();
+    return connection;
+  } catch (error) {
+    throw new Error(`Error connecting to the database: ${error.message}`);
+  }
 };
 
-// Function to get a connection from the pool
-const getConnection = async () => {
-  const pool = createPool();
-  return pool.getConnection();
+/**
+ * Closes a database connection.
+ * @param {Connection} connection - The database connection to close.
+ */
+const close = (connection) => {
+  return new Promise((resolve, reject) => {
+    if (connection) {
+      connection.release(); // Release the connection if it exists
+    }
+    resolve();
+  });
 };
 
-// Function to close a connection
-const closeConnection = (connection) => {
-  connection.release();
-};
 
-// Function to reset the database
+/**
+ * Resets the database by executing predefined SQL queries to clear or reinitialize tables.
+ */
 const resetDatabase = async () => {
-  const connection = await getConnection();
+  const connection = await connect();
   
   // Define SQL queries to clear or reinitialize tables
   const clearTableQueries = [
@@ -42,25 +60,31 @@ const resetDatabase = async () => {
     // Optionally, you can add code here to reinitialize data if needed
 
     // Close the connection after resetting the database
-    closeConnection(connection);
+    close(connection);
   } catch (error) {
-    console.error('Error resetting the database:', error);
+    console.error('Error resetting the database:', error.message);
   }
 };
 
-// Helper function to execute SQL queries
+/**
+ * Executes a SQL query on the database.
+ * @param {Connection} connection - The database connection on which to execute the query.
+ * @param {string} query - The SQL query to execute.
+ * @returns {Promise<Array>} A Promise that resolves to the results of the query.
+ */
 const executeQuery = async (connection, query) => {
   try {
     const [results] = await connection.query(query);
     return results;
   } catch (error) {
-    throw error;
+    throw new Error(`Error executing SQL query: ${error.message}`);
   }
 };
 
 module.exports = {
-  getConnection,
-  closeConnection,
+  connect,
+  close,
   resetDatabase,
+  executeQuery,
   // Add other exports if needed
 };

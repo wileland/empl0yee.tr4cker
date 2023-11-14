@@ -26,16 +26,20 @@ describe('Employee Tracker Tests', () => {
   });
 
   test('Running the Employee Tracker', async () => {
+    // Mock inquirer to provide user input (if needed)
+    inquirer.prompt.mockResolvedValue({}); // Replace with input as needed
+
     const result = await runEmployeeTracker();
 
-    expect(result).toBeDefined();
     // Add your assertions here to check if the Employee Tracker runs successfully
     // For example, you can expect the result to be a success message or a specific output
+    expect(result).toBeDefined();
   });
 
   test('Adding a department', async () => {
     const newDepartment = 'Test Department';
 
+    // Mock inquirer to provide user input for adding a department
     inquirer.prompt.mockResolvedValueOnce({ departmentName: newDepartment });
 
     await addDepartment();
@@ -57,9 +61,10 @@ describe('Employee Tracker Tests', () => {
       department: 'HR',
     };
 
+    // Mock inquirer to provide user input for adding an employee
     inquirer.prompt.mockResolvedValueOnce(employeeInfo);
 
-    await addEmployee(employeeInfo);
+    await addEmployee();
 
     const employees = await viewEmployees();
 
@@ -80,9 +85,10 @@ describe('Employee Tracker Tests', () => {
       department: 'Engineering',
     };
 
+    // Mock inquirer to provide user input for adding a role
     inquirer.prompt.mockResolvedValueOnce(newRole);
 
-    await addRole(newRole);
+    await addRole();
 
     const roles = await viewRoles();
 

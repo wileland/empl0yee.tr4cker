@@ -25,9 +25,10 @@ describe('Employee Tests', () => {
       department: 'HR',
     };
 
+    // Mock inquirer to provide user input for adding an employee
     inquirer.prompt.mockResolvedValueOnce(employeeInfo);
 
-    await addEmployee(employeeInfo);
+    await addEmployee();
 
     const employees = await viewEmployees();
 
@@ -49,12 +50,14 @@ describe('Employee Tests', () => {
       department: 'IT',
     };
 
+    // Mock inquirer to provide user input for adding an employee
     inquirer.prompt.mockResolvedValueOnce(employeeInfo);
 
     await addEmployee(employeeInfo);
 
     const employeesBefore = await viewEmployees();
 
+    // Mock inquirer to provide user input for removing an employee
     inquirer.prompt.mockResolvedValueOnce({
       employeeId: employeesBefore[0].id, // Assuming it's the first employee
     });
