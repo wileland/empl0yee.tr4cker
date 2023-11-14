@@ -28,8 +28,10 @@ module.exports = {
     testEnvironment: 'node',
   
     // An array of regex patterns that are matched against all test paths before executing the test
-    transform: {
-      '^.+\\.tsx?$': 'ts-jest',
-    },
+    {
+      "transform": {
+        "\\.ts$": "ts-jest"
+      }
+    }
   };
   
