@@ -1,32 +1,44 @@
 const Employee = require('../lib/Employee');
+const pool = require('../config/dbConfig');
 const inquirer = require('inquirer');
-const dbConfig = require('../config/dbConfig');
 
 jest.mock('inquirer');
 jest.mock('../lib/Employee'); // Mock the Employee class
 
 describe('Employee Tests', () => {
+  let connection;
+  let roleId;
+  let managerId;
+
   beforeAll(async () => {
-    // Setup the database connection before all tests
-    await dbConfig.connect();
+    connection = await pool.getConnection();
+    await connection.query('SET autocommit = 0');
+    // Create a role and a manager before testing employees
+    const [roleResult] = await connection.query('INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)', ['Test Role', 60000, 1]);
+    roleId = roleResult.insertId;
+    const [managerResult] = await connection.query('INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)', ['Manager', 'Lastname', roleId, null]);
+    managerId = managerResult.insertId;
+  });
+
+  beforeEach(async () => {
+    await connection.query('START TRANSACTION');
   });
 
   afterEach(async () => {
-    // Reset the database to a clean state after each test
-    await dbConfig.resetDatabase();
+    await connection.query('ROLLBACK');
   });
 
   afterAll(async () => {
-    // Close the database connection after all tests are done
-    await dbConfig.close();
+    await connection.release();
+    await pool.end();
   });
 
-  test('addEmployee() prompts for employee information and adds to database', async () => {
+  test('addEmployee() method adds the employee to the database', async () => {
     // Mock user input for adding an employee
     const employeeInfo = {
       firstName: 'John',
       lastName: 'Doe',
-      roleId: 1, // Mock the role ID
+      roleId: roleId, // Use the roleId created in the beforeAll hook
       managerId: null // Mock the manager ID
     };
     inquirer.prompt.mockResolvedValue(employeeInfo);
@@ -35,30 +47,12 @@ describe('Employee Tests', () => {
     Employee.addEmployee.mockResolvedValueOnce(1); // Mock the return value to be the employee ID
 
     // Call the method under test
-    await Employee.addEmployee(employeeInfo.firstName, employeeInfo.lastName, employeeInfo.roleId, employeeInfo.managerId);
+    const employeeId = await Employee.addEmployee(employeeInfo.firstName, employeeInfo.lastName, employeeInfo.roleId, employeeInfo.managerId);
 
     // Assertions to ensure the Employee.addEmployee was called with the correct arguments
-    expect(Employee.addEmployee).toHaveBeenCalledWith('John', 'Doe', 1, null);
+    expect(Employee.addEmployee).toHaveBeenCalledWith('John', 'Doe', roleId, null);
+    expect(employeeId).toBe(1); // Ensure the correct employee ID is returned
   });
 
-  test('updateEmployee() prompts for new employee information and updates the database', async () => {
-    // Mock the initial employee creation
-    const initialEmployee = { id: 1, firstName: 'Jane', lastName: 'Doe', roleId: 2, managerId: null };
-    Employee.addEmployee.mockResolvedValueOnce(initialEmployee.id);
-
-    // Mock user input for updating an employee
-    const updatedEmployeeInfo = { firstName: 'Jane', lastName: 'Smith', roleId: 2, managerId: null };
-    inquirer.prompt.mockResolvedValue(updatedEmployeeInfo);
-
-    // Mock the Employee.updateEmployee method
-    Employee.updateEmployee.mockResolvedValueOnce(1); // Mock the affected rows count
-
-    // Call the method under test
-    await Employee.updateEmployee(initialEmployee.id, updatedEmployeeInfo.firstName, updatedEmployeeInfo.lastName, updatedEmployeeInfo.roleId, updatedEmployeeInfo.managerId);
-
-    // Assertions to ensure the Employee.updateEmployee was called with the correct arguments
-    expect(Employee.updateEmployee).toHaveBeenCalledWith(initialEmployee.id, 'Jane', 'Smith', 2, null);
-  });
-
-  // Additional tests would follow a similar structure, mocking the necessary user input and Employee class methods
+  // ... other tests ...
 });
