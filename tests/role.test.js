@@ -1,93 +1,56 @@
-jest.mock('inquirer');
-const inquirer = require('inquirer');
-
+const { addRole, viewRoles, removeRole } = require('../index');
 const dbConfig = require('../config/dbConfig');
 
-const { addRole, viewRoles } = require('../index');
+describe('Role Tests', () => {
+  beforeAll(async () => {
+    await dbConfig.connect();
+  });
 
-test('Adding a role', async () => {
-  // Define a new role for testing
-  const newRole = {
-    title: 'Software Engineer',
-    salary: 80000,
-    department: 'Engineering',
-  };
+  afterAll(async () => {
+    await dbConfig.close();
+  });
 
-  // Perform the test
-  await addRole(newRole);
+  beforeEach(async () => {
+    await dbConfig.resetDatabase();
+  });
 
-  // Check if the role was added successfully
-  const roles = await viewRoles();
-
-  // Add your assertions here to check if the new role information is in the result
-  expect(roles).toContainEqual(
-    expect.objectContaining({
+  test('Adding a role', async () => {
+    const newRole = {
       title: 'Software Engineer',
       salary: 80000,
       department: 'Engineering',
-    })
-  );
+    };
+
+    await addRole(newRole);
+
+    const roles = await viewRoles();
+
+    expect(roles).toContainEqual(
+      expect.objectContaining({
+        title: 'Software Engineer',
+        salary: 80000,
+        department: 'Engineering',
+      })
+    );
+  });
+
+  test('Removing a role', async () => {
+    const newRole = {
+      title: 'Test Role',
+      salary: 60000,
+      department: 'Test Department',
+    };
+
+    await addRole(newRole);
+
+    const rolesBefore = await viewRoles();
+
+    await removeRole(rolesBefore[0].id); // Assuming it's the first role
+
+    const rolesAfter = await viewRoles();
+
+    expect(rolesAfter.length).toBe(rolesBefore.length - 1);
+  });
+
+  // Add more role-related test cases as needed
 });
-
-// Add more test cases for other role-related functions as needed
-const { addDepartment, viewDepartments } = require('../index');
-
-test('Adding a department', async () => {
-  // Define a new department for testing
-  const newDepartment = 'Test Department';
-
-  // Perform the test by adding the department
-  await addDepartment(newDepartment);
-
-  // Check if the department was added successfully
-  const departments = await viewDepartments();
-
-  // Add your assertions here to check if the new department is in the result
-  expect(departments).toContainEqual(
-    expect.objectContaining({
-      name: newDepartment,
-    })
-  );
-});
-
-// Add more test cases for other department-related functions as needed
-const inquirer = require('inquirer');
-
-// Mock Inquirer prompt
-jest.mock('inquirer');
-
-const { addEmployee, viewEmployees } = require('../index');
-
-test('Adding an employee', async () => {
-  // Define employee information for testing
-  const employeeInfo = {
-    firstName: 'John',
-    lastName: 'Doe',
-    role: 'Manager',
-    department: 'HR',
-  };
-
-  // Mock the Inquirer prompt to avoid waiting for user input
-  inquirer.prompt.mockResolvedValueOnce(employeeInfo);
-
-  // Perform the test by adding the employee
-  await addEmployee();
-
-  // Check if the employee was added successfully
-  const employees = await viewEmployees();
-
-  // Add your assertions here to check if the employee information is in the result
-  expect(employees).toContainEqual(
-    expect.objectContaining({
-      first_name: 'John',
-      last_name: 'Doe',
-      role: 'Manager',
-      department: 'HR',
-    })
-  );
-});
-
-// Add more test cases for other employee-related functions as needed
-test('Adding a department', async () => {
-  // ...
-}, 10000); // Set the timeout to 10 seconds (or adjust as needed)
