@@ -75,6 +75,48 @@ module.exports = {
     return lastInsertedId;
   },
 
+  // Function for adding a new department
+  addDepartment: (name, callback) => {
+    const query = 'INSERT INTO department (name) VALUES (?)';
+    const params = [name];
+    connection.query(query, params, (err, results) => {
+      if (err) {
+        console.error('Error adding department:', err);
+        callback(err, null);
+      } else {
+        callback(null, results.insertId);
+      }
+    });
+  },
+
+  // Function for adding a new role
+  addRole: (title, salary, departmentId, callback) => {
+    const query = 'INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)';
+    const params = [title, salary, departmentId];
+    connection.query(query, params, (err, results) => {
+      if (err) {
+        console.error('Error adding role:', err);
+        callback(err, null);
+      } else {
+        callback(null, results.insertId);
+      }
+    });
+  },
+
+  // Function for adding a new employee
+  addEmployee: (firstName, lastName, roleId, managerId, callback) => {
+    const query = 'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)';
+    const params = [firstName, lastName, roleId, managerId];
+    connection.query(query, params, (err, results) => {
+      if (err) {
+        console.error('Error adding employee:', err);
+        callback(err, null);
+      } else {
+        callback(null, results.insertId);
+      }
+    });
+  },
+
   // Close the database connection when done
   close: () => {
     connection.end();
