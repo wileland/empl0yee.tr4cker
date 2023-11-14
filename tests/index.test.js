@@ -1,24 +1,17 @@
 // index.test.js
 
-const cTable = require('console.table');
+// No need to require 'console.table' as it's a built-in Node.js module
 
+const dbConfig = require('../config/dbConfig');
 
 const { runEmployeeTracker } = require('../index');
 
-test('Running Employee Tracker', () => {
-
-  
-  // Spy on console.log to check if specific messages are printed during the execution
-  const spy = jest.spyOn(console, 'log');
-
-  // Run the main application
-  runEmployeeTracker();
-
-  // Add assertions to check if console.log messages were called as expected
-  // For example: expect(spy).toHaveBeenCalledWith('Connected to the database.');
-
-  // Clean up the spy
-  spy.mockRestore();
+test('Running the Employee Tracker', () => {
+  // Perform the test (assuming runEmployeeTracker returns a Promise)
+  return runEmployeeTracker().then((result) => {
+    // Add your assertions here to check if the Employee Tracker runs successfully
+    // For example, you can expect the result to be a success message or a specific output
+  });
 });
 
-// You can add more test cases to simulate different user actions in the application
+// Add more test cases for other index-related functions as needed

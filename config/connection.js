@@ -1,7 +1,7 @@
 const mysql = require('mysql2');
 
 // Create a connection pool to the database
-const pool = mysql.createPool({
+const pool = mysql.createPool(dbConfig);
   host: 'localhost',      // Replace with your actual database host
   user: 'root',           // Replace with your actual database user
   password: 'B30wulf7',  // Replace with your actual database password

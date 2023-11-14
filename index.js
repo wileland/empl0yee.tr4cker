@@ -63,14 +63,14 @@ async function runEmployeeTracker() {
     }
 }
 
+// Function to view departments
 async function viewDepartments() {
     const [rows] = await pool.query('SELECT * FROM department');
     console.table(rows);
     runEmployeeTracker();
 }
 
-// ... (Previous code)
-
+// Function to view roles
 async function viewRoles() {
     const query = `SELECT role.id, role.title, department.name AS department, role.salary 
                    FROM role 
@@ -80,6 +80,7 @@ async function viewRoles() {
     runEmployeeTracker();
 }
 
+// Function to view employees
 async function viewEmployees() {
     const query = `SELECT e.id, e.first_name, e.last_name, role.title, department.name AS department, role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager 
                    FROM employee e 
@@ -91,6 +92,7 @@ async function viewEmployees() {
     runEmployeeTracker();
 }
 
+// Function to add a department
 async function addDepartment() {
     const answer = await inquirer.prompt([
         {
@@ -108,6 +110,7 @@ async function addDepartment() {
     runEmployeeTracker();
 }
 
+// Function to add a role
 async function addRole() {
     const departments = await pool.query('SELECT * FROM department');
 
@@ -141,6 +144,7 @@ async function addRole() {
     runEmployeeTracker();
 }
 
+// Function to add an employee
 async function addEmployee() {
     const [roles] = await pool.query('SELECT * FROM role');
     const [employees] = await pool.query('SELECT * FROM employee');
@@ -184,6 +188,7 @@ async function addEmployee() {
     runEmployeeTracker();
 }
 
+// Function to update an employee's role
 async function updateEmployeeRole() {
     const [employees] = await pool.query('SELECT * FROM employee');
     const [roles] = await pool.query('SELECT * FROM role');
@@ -213,6 +218,9 @@ async function updateEmployeeRole() {
 function closeConnection() {
     pool.end();
 }
+
+// Export the runEmployeeTracker function
+module.exports = { runEmployeeTracker };
 
 // Call the main function to start the application
 runEmployeeTracker();

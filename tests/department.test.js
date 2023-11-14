@@ -1,6 +1,8 @@
 // department.test.js
 
-const cTable = require('console.table');
+// No need to require 'console.table' as it's a built-in Node.js module
+
+const dbConfig = require('../config/dbConfig');
 
 const { addDepartment, viewDepartments } = require('../index');
 
