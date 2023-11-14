@@ -1,4 +1,5 @@
-require('dotenv').config();
+// dbConfig.js
+
 const mysql = require('mysql2/promise');
 
 // Database configuration using environment variables
@@ -9,45 +10,26 @@ const dbConfig = {
   database: process.env.DB_NAME,
 };
 
-// Create a connection pool to the database
-const pool = mysql.createPool(dbConfig);
-
-// Establishes a database connection.
-const connect = async () => {
-  try {
-    const connection = await pool.getConnection();
-    console.log('Successfully connected to the database.');
-    return connection;
-  } catch (error) {
-    throw new Error(`Error connecting to the database: ${error.message}`);
-  }
+// Exports for other database functions
+const insert = async (connection, table, data) => {
+  const [results, fields] = await connection.query(`INSERT INTO ${table} SET ?`, data);
+  return results.insertId;
 };
 
-// Closes a database connection.
-const close = async (connection) => {
-  if (connection) {
-    try {
-      await connection.release();
-    } catch (error) {
-      console.error(`Error releasing the connection: ${error.message}`);
-    }
-  }
+const update = async (connection, table, data, where) => {
+  const [results, fields] = await connection.query(`UPDATE ${table} SET ? WHERE ?`, [data, where]);
+  return results.affectedRows;
 };
 
-// Resets the database (use with caution!).
-const resetDatabase = async () => {
-  // ... rest of the resetDatabase function ...
-};
-
-// Executes a SQL query on the database.
-const executeQuery = async (connection, query) => {
-  // ... rest of the executeQuery function ...
+const delete = async (connection, table, where) => {
+  const [results, fields] = await connection.query(`DELETE FROM ${table} WHERE ?`, where);
+  return results.affectedRows;
 };
 
 module.exports = {
-  connect,
-  close,
-  resetDatabase,
-  executeQuery,
-  // ... other exports if needed ...
+  dbConfig,
+  getConnection,
+  insert,
+  update,
+  delete,
 };

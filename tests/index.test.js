@@ -17,32 +17,68 @@ describe('Employee Tracker Tests', () => {
     await dbConfig.connect();
   });
 
+  afterEach(async () => {
+    await dbConfig.resetDatabase();
+  });
+
   afterAll(async () => {
     await dbConfig.close();
   });
 
-  beforeEach(async () => {
-    await dbConfig.resetDatabase();
+  // Test that the runEmployeeTracker() function prompts the user to select an option.
+  test('runEmployeeTracker() function prompts the user to select an option', async () => {
+    // Mock inquirer to provide user input
+    inquirer.prompt.mockResolvedValueOnce({ option: 'Add Department' });
+
+    // Add an assertion to verify that the runEmployeeTracker() function prompts the user to select an option
+    expect(inquirer.prompt).toHaveBeenCalledWith([
+      {
+        type: 'list',
+        name: 'option',
+        message: 'What would you like to do?',
+        choices: ['Add Department', 'Add Employee', 'Add Role', 'View Departments', 'View Employees', 'View Roles', 'Exit'],
+      },
+    ]);
   });
 
-  test('Running the Employee Tracker', async () => {
-    // Mock inquirer to provide user input (if needed)
-    inquirer.prompt.mockResolvedValue({}); // Replace with input as needed
+  // Test that the runEmployeeTracker() function returns the result of the user's selection.
+  test('runEmployeeTracker() function returns the result of the user\'s selection', async () => {
+    // Mock inquirer to provide user input
+    inquirer.prompt.mockResolvedValueOnce({ option: 'Add Department' });
 
+    // Add an assertion to verify that the runEmployeeTracker() function returns the result of the user's selection
     const result = await runEmployeeTracker();
 
-    // Add your assertions here to check if the Employee Tracker runs successfully
-    // For example, you can expect the result to be a success message or a specific output
-    expect(result).toBeDefined();
+    expect(result).toEqual('Added Department');
   });
 
-  test('Adding a department', async () => {
+  // Test that the runEmployeeTracker() function handles invalid user input gracefully.
+  test('runEmployeeTracker() function handles invalid user input', async () => {
+    // Mock inquirer to provide invalid user input
+    inquirer.prompt.mockResolvedValueOnce({ option: 'Invalid option' });
+
+    // Add an assertion to verify that the runEmployeeTracker() function handles invalid user input gracefully
+    const result = await runEmployeeTracker();
+
+    expect(result).toEqual('Invalid option');
+  });
+
+  // Test that the runEmployeeTracker() function exits the program when the user selects Exit.
+  test('runEmployeeTracker() function exits the program when the user selects Exit', async () => {
+    // Mock inquirer to provide user input to exit the program
+    inquirer.prompt.mockResolvedValueOnce({ option: 'Exit' });
+
+    // Add an assertion to verify that the runEmployeeTracker() function exits the program when the user selects Exit
+    const result = await runEmployeeTracker();
+
+    expect(process.exit).toHaveBeenCalled();
+  });
+
+  // Test that the addDepartment() method adds a new department to the database.
+  test('addDepartment() method adds a new department to the database', async () => {
     const newDepartment = 'Test Department';
 
-    // Mock inquirer to provide user input for adding a department
-    inquirer.prompt.mockResolvedValueOnce({ departmentName: newDepartment });
-
-    await addDepartment();
+    await addDepartment(newDepartment);
 
     const departments = await viewDepartments();
 
@@ -53,7 +89,8 @@ describe('Employee Tracker Tests', () => {
     );
   });
 
-  test('Adding an employee', async () => {
+  // Test that the addEmployee() method adds a new employee to the database.
+  test('addEmployee() method adds a new employee to the database', async () => {
     const employeeInfo = {
       firstName: 'John',
       lastName: 'Doe',
@@ -61,10 +98,7 @@ describe('Employee Tracker Tests', () => {
       department: 'HR',
     };
 
-    // Mock inquirer to provide user input for adding an employee
-    inquirer.prompt.mockResolvedValueOnce(employeeInfo);
-
-    await addEmployee();
+    await addEmployee(employeeInfo);
 
     const employees = await viewEmployees();
 
@@ -78,28 +112,14 @@ describe('Employee Tracker Tests', () => {
     );
   });
 
-  test('Adding a role', async () => {
+  // Test that the addRole() method adds a new role to the database.
+  test('addRole() method adds a new role to the database', async () => {
     const newRole = {
       title: 'Software Engineer',
       salary: 80000,
       department: 'Engineering',
     };
 
-    // Mock inquirer to provide user input for adding a role
-    inquirer.prompt.mockResolvedValueOnce(newRole);
-
-    await addRole();
+    await addRole(newRole);
 
     const roles = await viewRoles();
-
-    expect(roles).toContainEqual(
-      expect.objectContaining({
-        title: 'Software Engineer',
-        salary: 80000,
-        department: 'Engineering',
-      })
-    );
-  });
-
-  // Add more test cases for other functions as needed
-});

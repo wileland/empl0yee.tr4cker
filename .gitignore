@@ -1,12 +1,14 @@
 # Node.js dependencies
 node_modules/
+npm-cache/
+yarn-cache/
 
 # Logs
 logs/
 *.log
 
 # Compiled binary addons (if any)
-build/Release/
+build/
 
 # Environment variables
 .env
@@ -22,6 +24,9 @@ yarn.lock
 # Database files
 db/schema.sql
 db/seeds.sql
+
+# Test coverage reports
+coverage/
 
 # IDE-specific files
 .vscode/
