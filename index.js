@@ -1,17 +1,14 @@
 require('dotenv').config();
+const db = require('./queries'); // Adjust the path as needed
 
 // Import required modules
 const inquirer = require('inquirer');
 const cTable = require('console.table');
-const { pool } = require('./config/dbConfig');
-const Department = require('./lib/Department');
-const Employee = require('./lib/Employee');
-const Role = require('./lib/Role');
 
 // Main function to start the application
 async function main() {
   try {
-    const connection = await pool.getConnection();
+    const connection = await db.pool.getConnection();
 
     await runEmployeeTracker(connection);
   } catch (error) {
@@ -37,7 +34,7 @@ async function runEmployeeTracker(connection) {
           'Add an employee',
           'Update an employee\'s role',
           'Delete an employee',
-          'Update an employee\'s first name, last name, or manager',
+          'Update an employee\'s details',
           'Exit'
         ]
       }
@@ -69,7 +66,7 @@ async function runEmployeeTracker(connection) {
       case 'Delete an employee':
         await deleteEmployee(connection);
         break;
-      case 'Update an employee\'s first name, last name, or manager':
+      case 'Update an employee\'s details':
         await updateEmployeeDetails(connection);
         break;
       case 'Exit':
@@ -143,7 +140,7 @@ async function addDepartment(connection) {
       },
     ]);
 
-    await Department.addDepartment(departmentName, connection);
+    await db.addDepartment(departmentName, connection);
     console.log('Department added successfully.');
   } catch (error) {
     console.error('Error adding department:', error);
@@ -173,7 +170,7 @@ async function addRole(connection) {
       },
     ]);
 
-    await Role.addRole(title, salary, departmentId, connection);
+    await db.addRole(title, salary, departmentId, connection);
     console.log('Role added successfully.');
   } catch (error) {
     console.error('Error adding role:', error);
@@ -208,7 +205,7 @@ async function addEmployee(connection) {
       },
     ]);
 
-    await Employee.addEmployee(firstName, lastName, roleId, managerId, connection);
+    await db.addEmployee(firstName, lastName, roleId, managerId, connection);
     console.log('Employee added successfully.');
   } catch (error) {
     console.error('Error adding employee:', error);
@@ -221,8 +218,8 @@ async function addEmployee(connection) {
 async function updateEmployeeRole(connection) {
   try {
     // Fetch all employees and roles to display as choices
-    const employees = await Employee.getEmployees(connection);
-    const roles = await Role.getRoles(connection);
+    const employees = await db.getEmployees(connection);
+    const roles = await db.getRoles(connection);
 
     // Map the employees and roles to choices for inquirer prompts
     const employeeChoices = employees.map(e => ({ name: `${e.first_name} ${e.last_name}`, value: e.id }));
@@ -245,7 +242,7 @@ async function updateEmployeeRole(connection) {
     ]);
 
     // Update employee's role
-    await Employee.updateRole(employeeId, roleId, connection);
+    await db.updateEmployeeRole(employeeId, roleId, connection);
     console.log('Employee role updated successfully.');
   } catch (error) {
     console.error('Error updating employee role:', error);
@@ -258,7 +255,7 @@ async function updateEmployeeRole(connection) {
 async function deleteEmployee(connection) {
   try {
     // Fetch all employees to display as choices
-    const employees = await Employee.getEmployees(connection);
+    const employees = await db.getEmployees(connection);
     const employeeChoices = employees.map(e => ({ name: `${e.first_name} ${e.last_name}`, value: e.id }));
 
     // Prompt user for which employee to delete
@@ -272,7 +269,7 @@ async function deleteEmployee(connection) {
     ]);
 
     // Delete the selected employee
-    await Employee.delete(employeeId, connection);
+    await db.deleteEmployee(employeeId, connection);
     console.log('Employee deleted successfully.');
   } catch (error) {
     console.error('Error deleting employee:', error);
@@ -285,7 +282,7 @@ async function deleteEmployee(connection) {
 async function updateEmployeeDetails(connection) {
   try {
     // Fetch all employees to display as choices, including the option for 'None' for manager
-    const employees = await Employee.getEmployees(connection);
+    const employees = await db.getEmployees(connection);
     const employeeChoices = employees.map(e => ({ name: `${e.first_name} ${e.last_name}`, value: e.id }));
     employeeChoices.unshift({ name: 'None', value: null });
 
@@ -318,7 +315,7 @@ async function updateEmployeeDetails(connection) {
     ]);
 
     // Update employee's details
-    await Employee.updateDetails(employeeId, firstName, lastName, managerId, connection);
+    await db.updateEmployeeDetails(employeeId, firstName, lastName, managerId, connection);
     console.log('Employee details updated successfully.');
   } catch (error) {
     console.error('Error updating employee details:', error);
@@ -327,12 +324,12 @@ async function updateEmployeeDetails(connection) {
   }
 }
 
-// Close database connection properly
+// Function to close database connection properly
 async function closeConnection(connection) {
   try {
     await connection.release();
     console.log('Connection released back to the pool.');
-    await pool.end();
+    await db.pool.end();
     console.log('Database connection pool closed.');
   } catch (error) {
     console.error('Error closing the connection:', error);
@@ -342,7 +339,7 @@ async function closeConnection(connection) {
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\nGracefully shutting down...');
-  const connection = await pool.getConnection();
+  const connection = await db.pool.getConnection();
   await closeConnection(connection);
   process.exit(0);
 });
