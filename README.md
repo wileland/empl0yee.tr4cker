@@ -1,60 +1,139 @@
-# Empl0yee Tr4cker App
+empl0yee tr4cker App
 
-## Table of Contents
-1. [Description](#1-description)
-2. [Installation](#2-installation)
-3. [Usage](#3-usage)
-4. [Features](#4-features)
-5. [Database Schema](#5-database-schema)
-6. [Contributing](#6-contributing)
-7. [License](#7-license)
+empl0yee tr4cker is a command-line application built with Node.js, leveraging Inquirer for interactive prompts and MySQL2 for database management, allowing business owners to effectively oversee their company's employee database. With this application, users can interactively manage departments, roles, and employee data, streamlining business organization and planning processes.
 
-## 1. Description
-The empl0yee tr4cker App is a command-line application built using Node.js, Inquirer, and MySQL2. It allows business owners to manage their company's employee database. Users can view and manage departments, roles, and employees, helping them organize and plan their business.
+Table of Contents
+Description
+Getting Started
+Prerequisites
+Installation
+Usage
+Running the Application
+Functionality
+Features
+File Directory Structure
+Database Schema
+Database Configuration
+Tests
+Contributing
+License
+Description
+The empl0yee tr4cker App is designed to facilitate the management of departments, roles, and employees via a command-line interface. It assists users in organizing and planning their business by providing structured and interactive access to their organizational data.
 
-## 2. Installation
-To run the Employee Tracker App, follow these steps:
-1. Clone the repository to your local machine.
-2. Navigate to the project directory using the terminal.
-3. Install the required dependencies using the following command:
-    npm install
-4. Create a MySQL database and configure the connection details in `config/dbConfig.js`.
-5. Run the application using the following command:
-    node index.js
+Getting Started
+Prerequisites
+Before using the empl0yee tr4cker, you must install:
 
-## 3. Usage
-Once the application is running, you can use it to perform various tasks related to managing employee data, such as viewing departments, roles, and employees, adding new departments, roles, and employees, and updating employee roles.
+Node.js
+MySQL
+Inquirer for collecting input from the command line
+MySQL2 to connect to your MySQL database
+Installation
+Clone the repository to your local machine:
+bash
+Copy code
+git clone <repository-url>
+Navigate to the project directory in the terminal:
+bash
+Copy code
+cd employee-tracker
+Install the required dependencies (including Inquirer and MySQL2):
+bash
+Copy code
+npm install
+Create a MySQL database using the schema provided in db/schema.sql.
+Configure your database connection details in config/dbConfig.js with your personal credentials.
+Usage
+Running the Application
+Make sure your MySQL server is running.
+Update config/dbConfig.js with your MySQL credentials:
+javascript
+Copy code
+const dbConfig = {
+  host: 'your-hostname',
+  user: 'your-username',
+  password: 'your-password',
+  database: 'your-database-name',
+};
+Save your changes and start the application:
+bash
+Copy code
+npm start
+Functionality
+With the empl0yee tr4cker App, you can:
 
-## 4. Features
-The Employee Tracker App provides the following core features:
-- View all departments.
-- View all roles.
-- View all employees.
-- Add a department.
-- Add a role.
-- Add an employee.
-- Update an employee's role.
-- Exit the application.
+View all departments, roles, and employees
+Add new departments, roles, and employees
+Update existing employee roles
+View employees by department and manager
+Features
+Interactive command-line interface using Inquirer
+Robust database management with MySQL2
+Add, view, and remove departments, roles, and employees
+Update employee roles
+Exit the application
+File Directory Structure
+Below is the file directory structure of the empl0yee tr4cker App:
 
-## 5. Database Schema
-The app uses the following database schema:
-- **department**
-- id: INT PRIMARY KEY
-- name: VARCHAR(30) to hold department name
-- **role**
-- id: INT PRIMARY KEY
-- title: VARCHAR(30) to hold role title
-- salary: DECIMAL to hold role salary
-- department_id: INT to hold reference to department role belongs to
-- **employee**
-- id: INT PRIMARY KEY
-- first_name: VARCHAR(30) to hold employee first name
-- last_name: VARCHAR(30) to hold employee last name
-- role_id: INT to hold reference to employee role
-- manager_id: INT to hold reference to another employee that is the manager of the current employee (null if the employee has no manager)
+lua
+Copy code
+empl0yee_tr4cker
+│
+├── config
+│   ├── connection.js
+│   └── dbConfig.js
+│
+├── coverage
+│   ├── lcov-report (folder)
+│   ├── clover.xml
+│   ├── coverage-final.json
+│   └── lcov.info
+│
+├── db
+│   ├── schema.sql
+│   └── seeds.sql
+│
+├── lib
+│   ├── Department.js
+│   ├── Employee.js
+│   └── Role.js
+│
+├── node_modules (folder)
+│
+├── tests
+│   ├── department.test.js
+│   ├── employee.test.js
+│   ├── index.test.js
+│   └── role.test.js
+│
+├── utils
+│   └── queries.js
+│
+├── .gitignore
+├── index.js
+├── jest.config.js
+├── package-lock.json
+├── package.json
+└── README.md
+Database Schema
+The MySQL database schema consists of the following tables:
 
-## 6. Contributing
-Contributions are welcome! If you have suggestions or find issues with the app, please open an issue or submit a pull request.
+department: with fields for id and name
+role: with fields for id, title, salary, and department_id
+employee: with fields for id, first_name, last_name, role_id, and manager_id
+Detailed field definitions are included in db/schema.sql.
 
-## 7. License
-This project is licensed under the [MIT License](LICENSE).
+Database Configuration
+The database connection can be configured in config/dbConfig.js. Follow the installation guide to set up your environment.
+
+Tests
+To run tests and validate the functionalities of the empl0yee tr4cker, execute the following command:
+
+bash
+Copy code
+npm test
+Contributing
+Community contributions are encouraged. For any suggestions or issues, please follow the contribution guidelines provided in CONTRIBUTING.md.
+
+License
+This project is licensed under the MIT License.
