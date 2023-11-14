@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 // Import required modules
 const inquirer = require('inquirer');
 const mysql = require('mysql2/promise'); // Use mysql2/promise for async queries

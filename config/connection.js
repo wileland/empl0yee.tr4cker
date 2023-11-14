@@ -1,25 +1,24 @@
+require('dotenv').config();
 const mysql = require('mysql2');
 
-// Database configuration
+// Database configuration using environment variables
 const dbConfig = {
-  host: 'localhost',             // Replace with your actual database host
-  user: 'root',                  // Replace with your actual database user
-  password: 'B30wulf7',         // Replace with your actual database password
-  database: 'empl0yee_tr4cker_db'  // Replace with your actual database name
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
 };
 
 // Create a connection pool to the database
 const pool = mysql.createPool(dbConfig);
 
-// Open the MySQL connection pool
 pool.getConnection((error, connection) => {
   if (error) {
     console.error('Error connecting to the database:', error);
-    throw error;
+    // Consider adding retry logic here
+    return;
   }
-  console.log('Successfully connected to the empl0yee_tr4cker_database.');
-
-  // Release the connection back to the pool when done with it
+  console.log('Successfully connected to the database.');
   connection.release();
 });
 
