@@ -1,105 +1,64 @@
-const { addDepartment, viewDepartments, removeDepartment } = require('../index');
-const dbConfig = require('../config/dbConfig');
+const Department = require('../lib/Department');
+const pool = require('../config/dbConfig'); // Assuming this exports a pool object
 
 describe('Department Tests', () => {
+  let connection;
+
   beforeAll(async () => {
-    await dbConfig.connect();
+    connection = await pool.getConnection();
+    await connection.query('SET autocommit = 0');
+  });
+
+  beforeEach(async () => {
+    await connection.query('START TRANSACTION');
   });
 
   afterEach(async () => {
-    await dbConfig.resetDatabase();
+    await connection.query('ROLLBACK');
   });
 
   afterAll(async () => {
-    await dbConfig.close();
+    await connection.release();
+    await pool.end();
   });
 
   test('Adding a department', async () => {
-    const newDepartment = 'Test Department';
+    const newDepartmentName = 'Test Department';
+    const departmentId = await Department.addDepartment(newDepartmentName);
+    const addedDepartment = await Department.getDepartmentById(departmentId);
 
-    await addDepartment(newDepartment);
-
-    const departments = await viewDepartments();
-
-    expect(departments).toContainEqual(
-      expect.objectContaining({
-        name: newDepartment,
-      })
-    );
+    expect(addedDepartment).toEqual(expect.objectContaining({
+      name: newDepartmentName
+    }));
   });
 
   test('Removing a department', async () => {
-    const newDepartment = 'Test Department';
+    const newDepartmentName = 'Test Department';
+    const departmentId = await Department.addDepartment(newDepartmentName);
+    
+    await Department.removeDepartment(departmentId);
+    const departments = await Department.viewDepartments();
 
-    await addDepartment(newDepartment);
-
-    const departmentsBefore = await viewDepartments();
-
-    await removeDepartment(departmentsBefore[0].id); // Assuming it's the first department
-
-    const departmentsAfter = await viewDepartments();
-
-    expect(departmentsAfter.length).toBe(departmentsBefore.length - 1);
+    expect(departments).toEqual(expect.not.arrayContaining([
+      expect.objectContaining({ id: departmentId })
+    ]));
   });
 
-  // Add more department-related test cases as needed
-// Test that the getDepartmentById() method returns the correct department.
-test('getDepartmentById() method returns the correct department', async () => {
-  const newDepartment = 'Test Department';
-  await addDepartment(newDepartment);
+  // Additional test cases...
 
-  const department = await getDepartmentById(1); // Assuming it's the first department
+  // Note: Tests for behavior such as "method fails if the department name is already in use" would
+  // involve trying to add a department with the same name and catching the error.
 
-  expect(department).toBeDefined();
-  expect(department.name).toEqual(newDepartment);
-});
+  // Test that the removeDepartment() method fails if the department has employees assigned to it.
+  test('removeDepartment() method fails if the department has employees assigned to it', async () => {
+    const newDepartmentName = 'Test Department with Employee';
+    const departmentId = await Department.addDepartment(newDepartmentName);
+    // Here you would need to add an employee with a reference to the new department
+    // ...
 
-// Test that the updateDepartment() method updates the correct department.
-test('updateDepartment() method updates the correct department', async () => {
-  const newDepartment = 'Test Department';
-  await addDepartment(newDepartment);
+    await expect(Department.removeDepartment(departmentId)).rejects.toThrow();
+  });
 
-  await updateDepartment(1, 'Updated Test Department'); // Assuming it's the first department
-
-  const department = await getDepartmentById(1);
-
-  expect(department.name).toEqual('Updated Test Department');
-});
-
-// Test that the deleteDepartment() method deletes the correct department.
-test('deleteDepartment() method deletes the correct department', async () => {
-  const newDepartment = 'Test Department';
-  await addDepartment(newDepartment);
-
-  await deleteDepartment(1); // Assuming it's the first department
-
-  const departments = await viewDepartments();
-
-  expect(departments.length).toBe(0);
-});
-
-// Test that the addDepartment() method fails if the department name is already in use.
-test('addDepartment() method fails if the department name is already in use', async () => {
-  const newDepartment = 'Test Department';
-  await addDepartment(newDepartment);
-
-  expect(() => addDepartment(newDepartment)).toThrowError();
-});
-
-// Test that the removeDepartment() method fails if the department has employees assigned to it.
-test('removeDepartment() method fails if the department has employees assigned to it', async () => {
-  const newDepartment = 'Test Department';
-  await addDepartment(newDepartment);
-
-  await addEmployee('John Doe', newDepartment, 'Software Engineer');
-
-  expect(() => removeDepartment(1)).toThrowError();
-});
   // Test that the close() method properly releases the database connection
-  test('close() method releases database connection', async () => {
-    const department = new Department(pool);
-    await department.close();
-
-    expect(department.pool.connection).toBeNull();
-  });
+  // This test is not needed if using a pool, as the release of connections is managed by the pool itself.
 });

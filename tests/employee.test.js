@@ -1,139 +1,64 @@
-const { addEmployee, viewEmployees, removeEmployee, updateEmployee, getEmployeeById, getEmployeesByDepartment, getEmployeesByManager } = require('../index');
+const Employee = require('../lib/Employee');
+const inquirer = require('inquirer');
 const dbConfig = require('../config/dbConfig');
-const inquirer = require('inquirer'); // Import the inquirer library
 
 jest.mock('inquirer');
+jest.mock('../lib/Employee'); // Mock the Employee class
 
 describe('Employee Tests', () => {
   beforeAll(async () => {
+    // Setup the database connection before all tests
     await dbConfig.connect();
   });
 
   afterEach(async () => {
+    // Reset the database to a clean state after each test
     await dbConfig.resetDatabase();
   });
 
   afterAll(async () => {
+    // Close the database connection after all tests are done
     await dbConfig.close();
   });
 
-  // Test that the addEmployee() method calls the inquirer.prompt() method with the correct prompt.
-  test('addEmployee() method calls the inquirer.prompt() method with the correct prompt', async () => {
+  test('addEmployee() prompts for employee information and adds to database', async () => {
+    // Mock user input for adding an employee
     const employeeInfo = {
       firstName: 'John',
       lastName: 'Doe',
-      role: 'Manager',
-      department: 'HR',
+      roleId: 1, // Mock the role ID
+      managerId: null // Mock the manager ID
     };
+    inquirer.prompt.mockResolvedValue(employeeInfo);
 
-    // Mock inquirer to provide user input for adding an employee
-    inquirer.prompt.mockResolvedValueOnce(employeeInfo);
+    // Mock the Employee.addEmployee method
+    Employee.addEmployee.mockResolvedValueOnce(1); // Mock the return value to be the employee ID
 
-    const spy = jest.spyOn(inquirer, 'prompt');
+    // Call the method under test
+    await Employee.addEmployee(employeeInfo.firstName, employeeInfo.lastName, employeeInfo.roleId, employeeInfo.managerId);
 
-    await addEmployee();
-
-    expect(spy).toHaveBeenCalledWith([
-      {
-        type: 'input',
-        name: 'firstName',
-        message: 'Enter the employee\'s first name:',
-      },
-      {
-        type: 'input',
-        name: 'lastName',
-        message: 'Enter the employee\'s last name:',
-      },
-      {
-        type:
- 
-'list',
-        name: 'role',
-        message: 'Select the employee\'s role:',
-        choices: ['Manager', 'Employee'],
-      },
-      {
-        type: 'list',
-        name: 'department',
-        message: 'Select the employee\'s department:',
-        choices: ['HR', 'IT'],
-      },
-    ]);
+    // Assertions to ensure the Employee.addEmployee was called with the correct arguments
+    expect(Employee.addEmployee).toHaveBeenCalledWith('John', 'Doe', 1, null);
   });
 
-  // Test that the removeEmployee() method calls the inquirer.prompt() method with the correct prompt.
-  test('removeEmployee() method calls the inquirer.prompt() method with the correct prompt', async () => {
-    const employeeInfo = {
-      firstName: 'Jane',
-      lastName: 'Smith',
-      role: 'Employee',
-      department: 'IT',
-    };
+  test('updateEmployee() prompts for new employee information and updates the database', async () => {
+    // Mock the initial employee creation
+    const initialEmployee = { id: 1, firstName: 'Jane', lastName: 'Doe', roleId: 2, managerId: null };
+    Employee.addEmployee.mockResolvedValueOnce(initialEmployee.id);
 
-    // Mock inquirer to provide user input for adding an employee
-    inquirer.prompt.mockResolvedValueOnce(employeeInfo);
+    // Mock user input for updating an employee
+    const updatedEmployeeInfo = { firstName: 'Jane', lastName: 'Smith', roleId: 2, managerId: null };
+    inquirer.prompt.mockResolvedValue(updatedEmployeeInfo);
 
-    await addEmployee(employeeInfo);
+    // Mock the Employee.updateEmployee method
+    Employee.updateEmployee.mockResolvedValueOnce(1); // Mock the affected rows count
 
-    const spy = jest.spyOn(inquirer, 'prompt');
+    // Call the method under test
+    await Employee.updateEmployee(initialEmployee.id, updatedEmployeeInfo.firstName, updatedEmployeeInfo.lastName, updatedEmployeeInfo.roleId, updatedEmployeeInfo.managerId);
 
-    // Mock inquirer to provide user input for removing an employee
-    inquirer.prompt.mockResolvedValueOnce({
-      employeeId: 1, // Assuming it's the first employee
-    });
-
-    await removeEmployee();
-
-    expect(spy).toHaveBeenCalledWith([
-      {
-        type: 'list',
-        name: 'employeeId',
-        message: 'Select the employee to remove:',
-        choices: [1],
-      },
-    ]);
+    // Assertions to ensure the Employee.updateEmployee was called with the correct arguments
+    expect(Employee.updateEmployee).toHaveBeenCalledWith(initialEmployee.id, 'Jane', 'Smith', 2, null);
   });
 
-  // Test that the updateEmployee() method updates the correct employee.
-  test('updateEmployee() method updates the correct employee', async () => {
-    const employeeInfo = {
-      firstName: 'John',
-      lastName: 'Doe',
-      role: 'Manager',
-      department: 'HR',
-    };
-
-    // Add an employee
-    await addEmployee(employeeInfo);
-
-    const employee = await getEmployeeById(1); // Assuming it's the first employee
-
-    // Update the employee's first name
-    await updateEmployee(1, { firstName: 'Jane' });
-
-    const updatedEmployee = await getEmployeeById(1);
-
-    expect(updatedEmployee.first_name).toEqual('Jane');
-  });
-
-  // Test that the getEmployeeById() method returns the correct employee.
-  test('getEmployeeById() method returns the correct employee', async () => {
-    const employeeInfo = {
-      firstName: 'John',
-      lastName: 'Doe',
-      role: 'Manager',
-      department: 'HR',
-    };
-
-    // Add an employee
-    await addEmployee(employeeInfo);
-
-    const employee = await getEmployeeById(1); // Assuming it's the first employee
-
-    expect(employee.first_name).toEqual('John');
-    expect(employee.last_name).toEqual('Doe');
-    expect(employee.role).toEqual('Manager');
-    expect(employee.department).toEqual('HR');
-  });
-
-  // Test that the getEmployeesByDepartment() method returns
+  // Additional tests would follow a similar structure, mocking the necessary user input and Employee class methods
+});

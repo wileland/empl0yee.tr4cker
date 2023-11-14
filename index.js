@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 
 // Import required modules
@@ -183,46 +184,68 @@ async function addRole() {
 // Function to add an employee using the Employee class
 async function addEmployee() {
   try {
-    const roles = await Role.getRoles();
+    // Obtain a connection from the pool
+    const connection = await pool.getConnection();
+
+    // Get the list of roles and map them to choices for inquirer prompt
+    const roles = await Role.getRoles(connection);
     const roleChoices = roles.map((role) => ({
       name: role.title,
       value: role.id
     }));
 
+    // Get the list of managers (could be a list of employees)
+    const managers = await Employee.getEmployees(connection);
+    const managerChoices = managers.map((manager) => ({
+      name: `${manager.first_name} ${manager.last_name}`,
+      value: manager.id
+    }));
+
+    managerChoices.unshift({ name: 'None', value: null });
+
     const answers = await inquirer.prompt([
-      {
-        name: 'firstName',
-        type: 'input',
-        message: 'What is the first name of the employee?'
-      },
-      {
-        name: 'lastName',
-        type: 'input',
-        message: 'What is the last name of the employee?'
-      },
+      // ... First name and last name prompts ...
       {
         name: 'roleId',
         type: 'list',
         message: 'What is the role of the employee?',
         choices: roleChoices
       },
-      // If needed, add another prompt for selecting the manager
+      {
+        name: 'managerId',
+        type: 'list',
+        message: 'Who is the employee\'s manager?',
+        choices: managerChoices
+      },
     ]);
 
-    const employeeId = await Employee.addEmployee(answers.firstName, answers.lastName, answers.roleId, null); // Assuming no manager for now
+    // Validate the selected role
+    const roleExists = roles.some(role => role.id === answers.roleId);
+    if (!roleExists) {
+      throw new Error('Selected role does not exist.');
+    }
+
+    // Validate the selected manager
+    if (answers.managerId !== null && !managers.some(manager => manager.id === answers.managerId)) {
+      throw new Error('Selected manager does not exist.');
+    }
+
+    // Proceed with adding the employee
+    const employeeId = await Employee.addEmployee(
+      answers.firstName, answers.lastName, answers.roleId, answers.managerId, connection
+    );
     console.log(`Added new employee with ID: ${employeeId}`);
+
+    // Release the connection back to the pool
+    connection.release();
     runEmployeeTracker();
   } catch (error) {
     console.error('Error:', error);
+    // Release the connection in case of error as well
+    if (connection) connection.release();
     await pool.end();
   }
 }
-
-// Ensure to implement the other operations in a similar manner using their respective classes.
-
-// Start the application
-runEmployeeTracker();
-
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\nGracefully shutting down...');
