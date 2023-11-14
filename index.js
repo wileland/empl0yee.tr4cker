@@ -1,5 +1,3 @@
-// index.js
-
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const cTable = require('console.table');
@@ -7,9 +5,9 @@ const cTable = require('console.table');
 // Create a connection to the database
 const connection = mysql.createConnection({
     host: 'localhost',
-    user: 'your_username', // replace with your MySQL username
-    password: 'your_password', // replace with your MySQL password
-    database: 'your_database_name' // replace with your database name
+    user: 'your_mysql_username', // Replace with your MySQL username
+    password: 'your_mysql_password', // Replace with your MySQL password
+    database: 'empl0yee_tr4cker_db' // Replace with your database name
 });
 
 // Connect to the MySQL server
@@ -21,6 +19,7 @@ connection.connect(err => {
 
 // Function to start the Employee Tracker application
 function runEmployeeTracker() {
+    // Inquirer prompts for user actions
     inquirer.prompt([
         {
             type: 'list',
@@ -39,6 +38,7 @@ function runEmployeeTracker() {
         }
     ])
     .then(answer => {
+        // Switch statement to handle user-selected actions
         switch(answer.action) {
             case 'View all departments':
                 viewDepartments();
@@ -74,6 +74,7 @@ function runEmployeeTracker() {
         closeConnection();
     });
 }
+
 
 function viewDepartments() {
     connection.query('SELECT * FROM department', (err, results) => {

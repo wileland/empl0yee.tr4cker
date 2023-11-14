@@ -13,3 +13,23 @@
     "mysql2": "^3.6.3"
   }
 }
+{
+  "name": "empl0yee-tr4cker",
+  "version": "1.0.0",
+  "description": "Employee Tracker Application",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Your Name",
+  "license": "ISC",
+  "dependencies": {
+    "inquirer": "^8.2.4",
+    "mysql2": "^3.6.3"
+  },
+  "devDependencies": { 
+    "nodemon": "^2.0.15"
+  }
+}
