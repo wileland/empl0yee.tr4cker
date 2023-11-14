@@ -65,153 +65,188 @@ async function runEmployeeTracker() {
 
 // Function to view departments
 async function viewDepartments() {
-    const [rows] = await pool.query('SELECT * FROM department');
-    console.table(rows);
-    runEmployeeTracker();
+    try {
+        const [rows] = await pool.query('SELECT * FROM department');
+        console.table(rows);
+        runEmployeeTracker();
+    } catch (error) {
+        console.error('Error:', error);
+        closeConnection();
+    }
 }
 
 // Function to view roles
 async function viewRoles() {
-    const query = `SELECT role.id, role.title, department.name AS department, role.salary 
+    try {
+        const query = `SELECT role.id, role.title, department.name AS department, role.salary 
                    FROM role 
                    INNER JOIN department ON role.department_id = department.id`;
-    const [rows] = await pool.query(query);
-    console.table(rows);
-    runEmployeeTracker();
+        const [rows] = await pool.query(query);
+        console.table(rows);
+        runEmployeeTracker();
+    } catch (error) {
+        console.error('Error:', error);
+        closeConnection();
+    }
 }
 
 // Function to view employees
 async function viewEmployees() {
-    const query = `SELECT e.id, e.first_name, e.last_name, role.title, department.name AS department, role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager 
+    try {
+        const query = `SELECT e.id, e.first_name, e.last_name, role.title, department.name AS department, role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager 
                    FROM employee e 
                    LEFT JOIN role ON e.role_id = role.id 
                    LEFT JOIN department ON role.department_id = department.id 
                    LEFT JOIN employee m ON m.id = e.manager_id`;
-    const [rows] = await pool.query(query);
-    console.table(rows);
-    runEmployeeTracker();
+        const [rows] = await pool.query(query);
+        console.table(rows);
+        runEmployeeTracker();
+    } catch (error) {
+        console.error('Error:', error);
+        closeConnection();
+    }
 }
 
 // Function to add a department
 async function addDepartment() {
-    const answer = await inquirer.prompt([
-        {
-            name: 'newDepartment',
-            type: 'input',
-            message: 'What is the name of the new department?'
-        }
-    ]);
+    try {
+        const answer = await inquirer.prompt([
+            {
+                name: 'newDepartment',
+                type: 'input',
+                message: 'What is the name of the new department?'
+            }
+        ]);
 
-    await pool.query('INSERT INTO department SET ?', {
-        name: answer.newDepartment
-    });
+        await pool.query('INSERT INTO department SET ?', {
+            name: answer.newDepartment
+        });
 
-    console.log(`Added ${answer.newDepartment} to departments.`);
-    runEmployeeTracker();
+        console.log(`Added ${answer.newDepartment} to departments.`);
+        runEmployeeTracker();
+    } catch (error) {
+        console.error('Error:', error);
+        closeConnection();
+    }
 }
 
 // Function to add a role
 async function addRole() {
-    const departments = await pool.query('SELECT * FROM department');
+    try {
+        const departments = await pool.query('SELECT * FROM department');
 
-    const answers = await inquirer.prompt([
-        {
-            name: 'title',
-            type: 'input',
-            message: 'What is the title of the new role?'
-        },
-        {
-            name: 'salary',
-            type: 'input',
-            message: 'What is the salary of the new role?',
-            validate: value => !isNaN(value)
-        },
-        {
-            name: 'department',
-            type: 'list',
-            choices: departments[0].map(department => ({ name: department.name, value: department.id })),
-            message: 'Which department does this role belong to?'
-        }
-    ]);
+        const answers = await inquirer.prompt([
+            {
+                name: 'title',
+                type: 'input',
+                message: 'What is the title of the new role?'
+            },
+            {
+                name: 'salary',
+                type: 'input',
+                message: 'What is the salary of the new role?',
+                validate: value => !isNaN(value)
+            },
+            {
+                name: 'department',
+                type: 'list',
+                choices: departments[0].map(department => ({ name: department.name, value: department.id })),
+                message: 'Which department does this role belong to?'
+            }
+        ]);
 
-    await pool.query('INSERT INTO role SET ?', {
-        title: answers.title,
-        salary: answers.salary,
-        department_id: answers.department
-    });
+        await pool.query('INSERT INTO role SET ?', {
+            title: answers.title,
+            salary: answers.salary,
+            department_id: answers.department
+        });
 
-    console.log(`Added ${answers.title} to roles.`);
-    runEmployeeTracker();
+        console.log(`Added ${answers.title} to roles.`);
+        runEmployeeTracker();
+    } catch (error) {
+        console.error('Error:', error);
+        closeConnection();
+    }
 }
 
 // Function to add an employee
 async function addEmployee() {
-    const [roles] = await pool.query('SELECT * FROM role');
-    const [employees] = await pool.query('SELECT * FROM employee');
+    try {
+        const [roles] = await pool.query('SELECT * FROM role');
+        const [employees] = await pool.query('SELECT * FROM employee');
 
-    const answers = await inquirer.prompt([
-        {
-            name: 'firstName',
-            type: 'input',
-            message: 'What is the employee\'s first name?'
-        },
-        {
-            name: 'lastName',
-            type: 'input',
-            message: 'What is the employee\'s last name?'
-        },
-        {
-            name: 'role',
-            type: 'list',
-            choices: roles.map(role => ({ name: role.title, value: role.id })),
-            message: 'What is the employee\'s role?'
-        },
-        {
-            name: 'manager',
-            type: 'list',
-            choices: [
-                { name: 'None', value: null },
-                ...employees.map(employee => ({ name: employee.first_name + ' ' + employee.last_name, value: employee.id }))
-            ],
-            message: 'Who is the employee\'s manager?'
-        }
-    ]);
+        const answers = await inquirer.prompt([
+            {
+                name: 'firstName',
+                type: 'input',
+                message: 'What is the employee\'s first name?'
+            },
+            {
+                name: 'lastName',
+                type: 'input',
+                message: 'What is the employee\'s last name?'
+            },
+            {
+                name: 'role',
+                type: 'list',
+                choices: roles.map(role => ({ name: role.title, value: role.id })),
+                message: 'What is the employee\'s role?'
+            },
+            {
+                name: 'manager',
+                type: 'list',
+                choices: [
+                    { name: 'None', value: null },
+                    ...employees.map(employee => ({ name: employee.first_name + ' ' + employee.last_name, value: employee.id }))
+                ],
+                message: 'Who is the employee\'s manager?'
+            }
+        ]);
 
-    await pool.query('INSERT INTO employee SET ?', {
-        first_name: answers.firstName,
-        last_name: answers.lastName,
-        role_id: answers.role,
-        manager_id: answers.manager
-    });
+        await pool.query('INSERT INTO employee SET ?', {
+            first_name: answers.firstName,
+            last_name: answers.lastName,
+            role_id: answers.role,
+            manager_id: answers.manager
+        });
 
-    console.log(`Added ${answers.firstName} ${answers.lastName} to employees.`);
-    runEmployeeTracker();
+        console.log(`Added ${answers.firstName} ${answers.lastName} to employees.`);
+        runEmployeeTracker();
+    } catch (error) {
+        console.error('Error:', error);
+        closeConnection();
+    }
 }
 
 // Function to update an employee's role
 async function updateEmployeeRole() {
-    const [employees] = await pool.query('SELECT * FROM employee');
-    const [roles] = await pool.query('SELECT * FROM role');
+    try {
+        const [employees] = await pool.query('SELECT * FROM employee');
+        const [roles] = await pool.query('SELECT * FROM role');
 
-    const answers = await inquirer.prompt([
-        {
-            name: 'employee',
-            type: 'list',
-            choices: employees.map(employee => ({ name: employee.first_name + ' ' + employee.last_name, value: employee.id })),
-            message: 'Which employee\'s role do you want to update?'
-        },
-        {
-            name: 'role',
-            type: 'list',
-            choices: roles.map(role => ({ name: role.title, value: role.id })),
-            message: 'What is the new role of the employee?'
-        }
-    ]);
+        const answers = await inquirer.prompt([
+            {
+                name: 'employee',
+                type: 'list',
+                choices: employees.map(employee => ({ name: employee.first_name + ' ' + employee.last_name, value: employee.id })),
+                message: 'Which employee\'s role do you want to update?'
+            },
+            {
+                name: 'role',
+                type: 'list',
+                choices: roles.map(role => ({ name: role.title, value: role.id })),
+                message: 'What is the new role of the employee?'
+            }
+        ]);
 
-    await pool.query('UPDATE employee SET role_id = ? WHERE id = ?', [answers.role, answers.employee]);
+        await pool.query('UPDATE employee SET role_id = ? WHERE id = ?', [answers.role, answers.employee]);
 
-    console.log('Updated employee role.');
-    runEmployeeTracker();
+        console.log('Updated employee role.');
+        runEmployeeTracker();
+    } catch (error) {
+        console.error('Error:', error);
+        closeConnection();
+    }
 }
 
 // Function to close the database connection
@@ -223,4 +258,18 @@ function closeConnection() {
 module.exports = { runEmployeeTracker };
 
 // Call the main function to start the application
-runEmployeeTracker();
+if (require.main === module) {
+    runEmployeeTracker();
+}
+
+module.exports = {
+    runEmployeeTracker,
+    viewDepartments,
+    viewRoles,
+    viewEmployees,
+    addDepartment,
+    addRole,
+    addEmployee,
+    updateEmployeeRole,
+    closeConnection,
+};

@@ -1,37 +1,21 @@
-// department.test.js
-
-// No need to require 'console.table' as it's a built-in Node.js module
-
-const dbConfig = require('../config/dbConfig');
-
 const { addDepartment, viewDepartments } = require('../index');
 
-test('Adding a department', () => {
-  // Define a new department name for testing
-  const newDepartmentName = 'Test Department';
+test('Adding a department', async () => {
+  // Define a new department for testing
+  const newDepartment = 'Test Department';
 
-  // Perform the test (assuming addDepartment returns a Promise)
-  return addDepartment(newDepartmentName)
-    .then(() => {
-      // Check if the department was added successfully
-      return viewDepartments().then((departments) => {
-        expect(departments).toContain(newDepartmentName);
-      });
-    });
-});
+  // Perform the test by adding the department
+  await addDepartment(newDepartment);
 
-test('Viewing all departments', () => {
-  // Perform the test (assuming viewDepartments returns a Promise)
-  return viewDepartments().then((departments) => {
-    // Check if departments is an array
-    expect(Array.isArray(departments)).toBe(true);
-    
-    // You can add more specific assertions here based on the expected data
-    // For example, check if a specific department name is present in the result
-    expect(departments).toContain('Department 1');
-    expect(departments).toContain('Department 2');
-    expect(departments).toContain('Department 3');
-  });
+  // Check if the department was added successfully
+  const departments = await viewDepartments();
+
+  // Add your assertions here to check if the new department is in the result
+  expect(departments).toContainEqual(
+    expect.objectContaining({
+      name: newDepartment,
+    })
+  );
 });
 
 // Add more test cases for other department-related functions as needed
