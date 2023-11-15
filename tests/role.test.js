@@ -1,4 +1,3 @@
-// role.test.js
 const Role = require('../lib/Role');
 const pool = require('../config/dbConfig');
 

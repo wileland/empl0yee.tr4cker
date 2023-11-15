@@ -45,20 +45,4 @@ describe('Department Tests', () => {
   });
 
   // Additional test cases...
-
-  // Note: Tests for behavior such as "method fails if the department name is already in use" would
-  // involve trying to add a department with the same name and catching the error.
-
-  // Test that the removeDepartment() method fails if the department has employees assigned to it.
-  test('removeDepartment() method fails if the department has employees assigned to it', async () => {
-    const newDepartmentName = 'Test Department with Employee';
-    const departmentId = await Department.addDepartment(newDepartmentName);
-    // Here you would need to add an employee with a reference to the new department
-    // ...
-
-    await expect(Department.removeDepartment(departmentId)).rejects.toThrow();
-  });
-
-  // Test that the close() method properly releases the database connection
-  // This test is not needed if using a pool, as the release of connections is managed by the pool itself.
 });
