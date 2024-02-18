@@ -11,7 +11,7 @@ import {
   addRole,
   addEmployee,
   updateEmployeeRole,
-  deleteEmployee, // Import the deleteEmployee function
+  deleteEmployee,
   getDepartmentsForChoices,
   getRolesForChoices,
   getEmployeesForChoices
@@ -32,7 +32,7 @@ async function runEmployeeTracker() {
       type: 'list',
       name: 'action',
       message: 'What would you like to do?',
-      loop: false, // Disable the loop behavior
+      loop: false,
       choices: [
         'View all departments',
         'View all roles',
@@ -135,7 +135,7 @@ async function runEmployeeTracker() {
           await updateEmployeeRole(employeeId, newRoleId);
           console.log('Employee role updated successfully!');
           break;
-        case 'Delete an employee': // Handle the action to delete an employee
+        case 'Delete an employee':
           const { employeeIdToDelete } = await inquirer.prompt({
             type: 'list',
             name: 'employeeIdToDelete',
@@ -156,7 +156,6 @@ async function runEmployeeTracker() {
     }
   }
 
-  // Close the pool and exit the application after the loop ends
   await closePool();
   console.log('Application exited successfully.');
 }
@@ -177,8 +176,7 @@ async function main() {
     console.log(`Server running on port ${PORT}`);
   });
 
-  // Start the CLI after the server is up and running
-  runEmployeeTracker().catch((error) => {
+  await runEmployeeTracker().catch((error) => {
     console.error('Error in runEmployeeTracker:', error);
     process.exit(1);
   });
@@ -188,7 +186,6 @@ main().catch((error) => {
   console.error('Error in main function:', error);
 });
 
-// Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\nGracefully shutting down...');
   await closePool();
