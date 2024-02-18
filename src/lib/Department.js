@@ -1,32 +1,42 @@
-const pool = require('../config/dbConfig');
+// Using ES6 import syntax (make sure to set "type": "module" in package.json or use .mjs extension)
+import pool from '../config/dbConfig.js';
 
 class Department {
-  static async addDepartment(name) {
+  // Use arrow functions for static methods if you prefer
+  static addDepartment = async (name) => {
     const [result] = await pool.query('INSERT INTO department (name) VALUES (?)', [name]);
     return result.insertId;
   }
 
-  static async viewDepartments() {
+  static viewDepartments = async () => {
     const [departments] = await pool.query('SELECT * FROM department');
     return departments;
   }
 
-  static async getDepartmentById(departmentId) {
+  static getDepartmentById = async (departmentId) => {
     const [departments] = await pool.query('SELECT * FROM department WHERE id = ?', [departmentId]);
     return departments[0];
   }
 
-  static async removeDepartment(departmentId) {
-    // Check if any employees are associated with the department before attempting to delete
-    const [employees] = await pool.query('SELECT * FROM employee WHERE department_id = ?', [departmentId]);
-    if (employees.length > 0) {
-      throw new Error('Department has employees assigned and cannot be deleted');
+  static removeDepartment = async (departmentId) => {
+    // Use a transaction to ensure data integrity during the delete operation
+    await pool.beginTransaction();
+    try {
+      const [employees] = await pool.query('SELECT * FROM employee WHERE department_id = ?', [departmentId]);
+      if (employees.length > 0) {
+        throw new Error('Department has employees assigned and cannot be deleted');
+      }
+
+      const [result] = await pool.query('DELETE FROM department WHERE id = ?', [departmentId]);
+      await pool.commit();
+      return result.affectedRows;
+    } catch (error) {
+      await pool.rollback();
+      throw error; // Rethrow the error after rolling back the transaction
     }
-    const [result] = await pool.query('DELETE FROM department WHERE id = ?', [departmentId]);
-    return result.affectedRows;
   }
 
-  static async updateDepartment(departmentId, newName) {
+  static updateDepartment = async (departmentId, newName) => {
     const [result] = await pool.query('UPDATE department SET name = ? WHERE id = ?', [newName, departmentId]);
     return result.affectedRows;
   }
@@ -34,4 +44,5 @@ class Department {
   // Additional methods as needed...
 }
 
-module.exports = Department;
+// Using ES6 export syntax
+export default Department;

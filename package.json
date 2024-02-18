@@ -2,10 +2,11 @@
   "name": "empl0yee-tr4cker",
   "version": "1.0.0",
   "description": "Employee Tracker Application",
-  "main": "app.js",
+  "type": "module",
+  "main": "src/app.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
     "test": "NODE_ENV=test jest"
   },
   "author": "William Haynes",
