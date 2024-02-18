@@ -4,22 +4,22 @@
 The Employee Tracker is a command-line application built with Node.js, leveraging Inquirer for interactive prompts and MySQL2 for database management. It allows business owners to effectively oversee and manage their company's organizational structure, including departments, roles, and employee data.
 
 ## Table of Contents
-I. [Description](#i-description)  
-II. [Getting Started](#ii-getting-started)  
-  - A. [Prerequisites](#a-prerequisites)  
-  - B. [Installation](#b-installation)  
-III. [Usage](#iii-usage)  
-  - A. [Running the Application](#a-running-the-application)  
-  - B. [Functionality](#b-functionality)  
-IV. [Features](#iv-features)  
-V. [File Directory Structure](#v-file-directory-structure)  
-VI. [Database Schema](#vi-database-schema)  
-VII. [Database Configuration](#vii-database-configuration)  
-VIII. [Tests](#viii-tests)  
-IX. [Contributing](#ix-contributing)  
-X. [License](#x-license)  
-XI. [User Story](#xi-user-story)  
-XII. [Acceptance Criteria](#xii-acceptance-criteria)
+ [Description](#i-description)  
+ [Getting Started](#ii-getting-started)  
+ [Prerequisites](#a-prerequisites)  
+ [Installation](#b-installation)  
+ [Usage](#iii-usage)  
+ [Running the Application](#a-running-the-application)  
+ [Functionality](#b-functionality)  
+ [Features](#iv-features)  
+ [File Directory Structure](#v-file-directory-structure)  
+ [Database Schema](#vi-database-schema)  
+ [Database Configuration](#vii-database-configuration)  
+ [Tests](#viii-tests)  
+ [Contributing](#ix-contributing)  
+ [License](#x-license)  
+ [User Story](#xi-user-story)  
+ [Acceptance Criteria](#xii-acceptance-criteria)
 
 ## I. Description
 The Employee Tracker is a command-line application built with Node.js, leveraging Inquirer for interactive prompts and MySQL2 for database management. It allows business owners to effectively oversee and manage their company's organizational structure, including departments, roles, and employee data.
