@@ -28,45 +28,41 @@ const PORT = process.env.PORT || 3000;
 async function runEmployeeTracker() {
   let exitLoop = false;
   while (!exitLoop) {
-    const { action } = await inquirer.prompt({
-      type: 'list',
-      name: 'action',
-      message: 'What would you like to do?',
-      loop: false,
-      choices: [
-        'View all departments',
-        'View all roles',
-        'View all employees',
-        'Add a department',
-        'Add a role',
-        'Add an employee',
-        'Update an employee role',
-        'Delete an employee',
-        'Exit'
-      ],
-    });
-
     try {
+      const { action } = await inquirer.prompt({
+        type: 'list',
+        name: 'action',
+        message: 'What would you like to do?',
+        loop: false,
+        choices: [
+          'View all departments',
+          'View all roles',
+          'View all employees',
+          'Add a department',
+          'Add a role',
+          'Add an employee',
+          'Update an employee role',
+          'Delete an employee',
+          'Exit'
+        ].concat(exitLoop ? ['Back'] : []),
+      });
+  
       switch (action) {
         case 'View all departments':
-          const departments = await viewAllDepartments();
-          console.table(departments);
+          console.table(await viewAllDepartments());
           break;
         case 'View all roles':
-          const roles = await viewAllRoles();
-          console.table(roles);
+          console.table(await viewAllRoles());
           break;
         case 'View all employees':
-          const employees = await viewAllEmployees();
-          console.table(employees);
+          console.table(await viewAllEmployees());
           break;
         case 'Add a department':
-          const { departmentName } = await inquirer.prompt({
+          await addDepartment(await inquirer.prompt({
             type: 'input',
             name: 'departmentName',
             message: 'What is the name of the department?',
-          });
-          await addDepartment(departmentName);
+          }).departmentName);
           console.log('Department added successfully!');
           break;
         case 'Add a role':
@@ -120,18 +116,20 @@ async function runEmployeeTracker() {
           console.log('Employee added successfully!');
           break;
         case 'Update an employee role':
-          const { employeeId } = await inquirer.prompt({
-            type: 'list',
-            name: 'employeeId',
-            message: 'Which employee do you want to update?',
-            choices: await getEmployeesForChoices(),
-          });
-          const { newRoleId } = await inquirer.prompt({
-            type: 'list',
-            name: 'newRoleId',
-            message: 'Which role do you want to assign to the selected employee?',
-            choices: await getRolesForChoices(),
-          });
+          const { employeeId, newRoleId } = await inquirer.prompt([
+            {
+              type: 'list',
+              name: 'employeeId',
+              message: 'Which employee do you want to update?',
+              choices: await getEmployeesForChoices(),
+            },
+            {
+              type: 'list',
+              name: 'newRoleId',
+              message: 'Which role do you want to assign to the selected employee?',
+              choices: await getRolesForChoices(),
+            },
+          ]);
           await updateEmployeeRole(employeeId, newRoleId);
           console.log('Employee role updated successfully!');
           break;
@@ -147,6 +145,9 @@ async function runEmployeeTracker() {
           break;
         case 'Exit':
           exitLoop = true;
+          break;
+        case 'Back':
+          exitLoop = true; // Exit the current loop iteration to go back
           break;
         default:
           console.log('Invalid action selected');
@@ -176,16 +177,25 @@ async function main() {
     console.log(`Server running on port ${PORT}`);
   });
 
-  await runEmployeeTracker().catch((error) => {
+  try {
+    await runEmployeeTracker();
+  } catch (error) {
     console.error('Error in runEmployeeTracker:', error);
     process.exit(1);
-  });
+  } finally {
+    await closePool();
+    console.log('Database connection pool closed.');
+    console.log('Application exited successfully.');
+    process.exit(0); // Explicitly exit the Node.js process
+  }
 }
 
 main().catch((error) => {
   console.error('Error in main function:', error);
+  process.exit(1);
 });
 
+// Listen for SIGINT signal (Ctrl+C)
 process.on('SIGINT', async () => {
   console.log('\nGracefully shutting down...');
   await closePool();
