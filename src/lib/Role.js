@@ -1,30 +1,40 @@
-// Role.js
-const pool = require('../config/dbConfig');
+// Import the pool using ES6 import syntax
+import pool from '../config/dbConfig.js';
 
 class Role {
-  static async addRole(title, salary, departmentId) {
-    // Add logic to ensure the department exists before adding a role
+  static addRole = async (title, salary, departmentId) => {
+    // Ensure the department exists before adding a role
     const [department] = await pool.query('SELECT * FROM department WHERE id = ?', [departmentId]);
-    if (!department.length) {
+    if (department.length === 0) {
       throw new Error('Department not found');
     }
 
     const [result] = await pool.query('INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)', [title, salary, departmentId]);
-    return result.insertId; // Return the ID of the newly created role
+    return result.insertId;
   }
 
-  static async getRoleById(roleId) {
+  static getRoleById = async (roleId) => {
     const [rows] = await pool.query('SELECT * FROM role WHERE id = ?', [roleId]);
-    return rows[0]; // Return the role if found
+    if (rows.length === 0) throw new Error('Role not found');
+    return rows[0];
   }
 
-  static async updateRole(roleId, { title, salary, departmentId }) {
-    // Optional: Add logic to validate the existence of the department if departmentId is updated
+  static updateRole = async (roleId, { title, salary, departmentId }) => {
+    // Validate the existence of the department if departmentId is updated
+    if (departmentId) {
+      const [department] = await pool.query('SELECT * FROM department WHERE id = ?', [departmentId]);
+      if (department.length === 0) {
+        throw new Error('Department not found');
+      }
+    }
+
     const [result] = await pool.query('UPDATE role SET title = ?, salary = ?, department_id = ? WHERE id = ?', [title, salary, departmentId, roleId]);
-    return result.affectedRows; // Return the number of affected rows
+    if (result.affectedRows === 0) throw new Error('Role not found or no update made');
+    return result.affectedRows;
   }
 
-  // ... additional methods like removeRole() as needed ...
+  // Additional methods can be added here following the same pattern
 }
 
-module.exports = Role;
+// Export the Role class using ES6 export syntax
+export default Role;

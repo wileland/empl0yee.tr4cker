@@ -1,20 +1,7 @@
-const mysql = require('mysql');
-require('dotenv').config();
-const db = require('./queries');
-
-// Example usage
-async function viewDepartments() {
-  try {
-    const departments = await db.select('SELECT * FROM department ORDER BY id', []);
-    console.table(departments);
-  } catch (error) {
-    console.error('Error viewing departments:', error);
-  }
-}
-
-// Call the function
-viewDepartments();
-
+// Using ES6 import syntax
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Create a connection pool to the MySQL database using the environment variables
 const pool = mysql.createPool({
@@ -25,127 +12,62 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
 });
 
-// Function for executing a SQL query with error handling
-const executeQuery = (query, params) => {
-  return new Promise((resolve, reject) => {
-    pool.query(query, params, (err, results) => {
-      if (err) {
-        console.error('Error executing query:', err);
-        reject(err);
-      } else {
-        resolve(results);
-      }
-    });
-  });
+// A utility function for executing SQL queries with parameters
+const executeQuery = async (query, params = []) => {
+  try {
+    const [results] = await pool.query(query, params);
+    return results;
+  } catch (error) {
+    console.error('Error executing query:', error.message);
+    throw error;
+  }
 };
 
-module.exports = {
-  // Function for executing a SELECT query
-  select: async (query, params) => {
-    try {
-      const results = await executeQuery(query, params);
-      return results;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Function for executing an INSERT, UPDATE, or DELETE query
-  execute: async (query, params) => {
-    try {
-      const results = await executeQuery(query, params);
-      return results;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Function for adding a new department
+// Exporting the functions as an object to keep the structure similar to original
+export const db = {
+  select: executeQuery,
+  execute: executeQuery,
   addDepartment: async (name) => {
     const query = 'INSERT INTO department (name) VALUES (?)';
-    const params = [name];
-
-    try {
-      const results = await executeQuery(query, params);
-      return results.insertId; // Return the ID of the newly inserted department
-    } catch (error) {
-      throw error;
-    }
+    const results = await executeQuery(query, [name]);
+    return results.insertId;
   },
-
-  // Function for adding a new role
   addRole: async (title, salary, departmentId) => {
     const query = 'INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)';
-    const params = [title, salary, departmentId];
-
-    try {
-      const results = await executeQuery(query, params);
-      return results.insertId; // Return the ID of the newly inserted role
-    } catch (error) {
-      throw error;
-    }
+    const results = await executeQuery(query, [title, salary, departmentId]);
+    return results.insertId;
   },
-
-  // Function for adding a new employee
   addEmployee: async (firstName, lastName, roleId, managerId) => {
     const query = 'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)';
-    const params = [firstName, lastName, roleId, managerId];
-
-    try {
-      const results = await executeQuery(query, params);
-      return results.insertId; // Return the ID of the newly inserted employee
-    } catch (error) {
-      throw error;
-    }
+    const results = await executeQuery(query, [firstName, lastName, roleId, managerId]);
+    return results.insertId;
   },
-
-  // Function for updating an employee's role
   updateEmployeeRole: async (employeeId, roleId) => {
     const query = 'UPDATE employee SET role_id = ? WHERE id = ?';
-    const params = [roleId, employeeId];
-
-    try {
-      const results = await executeQuery(query, params);
-      return results.affectedRows > 0; // Return true if the update was successful
-    } catch (error) {
-      throw error;
-    }
+    const results = await executeQuery(query, [roleId, employeeId]);
+    return results.affectedRows > 0;
   },
-
-  // Function for deleting an employee
   deleteEmployee: async (employeeId) => {
     const query = 'DELETE FROM employee WHERE id = ?';
-    const params = [employeeId];
-
-    try {
-      const results = await executeQuery(query, params);
-      return results.affectedRows > 0; // Return true if the delete was successful
-    } catch (error) {
-      throw error;
-    }
+    const results = await executeQuery(query, [employeeId]);
+    return results.affectedRows > 0;
   },
-
-  // Function for updating an employee's details (first name, last name, or manager)
   updateEmployeeDetails: async (employeeId, firstName, lastName, managerId) => {
     const query = 'UPDATE employee SET first_name = ?, last_name = ?, manager_id = ? WHERE id = ?';
-    const params = [firstName, lastName, managerId, employeeId];
-
-    try {
-      const results = await executeQuery(query, params);
-      return results.affectedRows > 0; // Return true if the update was successful
-    } catch (error) {
-      throw error;
-    }
+    const results = await executeQuery(query, [firstName, lastName, managerId, employeeId]);
+    return results.affectedRows > 0;
   },
-
-  // Function to close the database connection pool when done
-  close: () => {
-    pool.end((err) => {
-      if (err) {
-        console.error('Error closing the database connection:', err);
-      } else {
-        console.log('Connection to MySQL closed');
-      }
-    });
-  },
+  close: async () => {
+    await pool.end();
+  }
 };
+
+// Example usage (commented out to prevent execution here)
+// (async () => {
+//   try {
+//     const departments = await db.select('SELECT * FROM department ORDER BY id');
+//     console.table(departments);
+//   } catch (error) {
+//     console.error('Error viewing departments:', error);
+//   }
+// })();
