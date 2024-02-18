@@ -27,6 +27,7 @@ const PORT = process.env.PORT || 3000;
 // Main CLI function
 async function runEmployeeTracker() {
   let exitLoop = false;
+  let isFirstPrompt = true; // To track the first prompt
   while (!exitLoop) {
     try {
       const { action } = await inquirer.prompt({
@@ -34,7 +35,7 @@ async function runEmployeeTracker() {
         name: 'action',
         message: 'What would you like to do?',
         loop: false,
-        choices: [
+        choices: isFirstPrompt ? [ // Initial prompt without the "Back" option
           'View all departments',
           'View all roles',
           'View all employees',
@@ -44,9 +45,28 @@ async function runEmployeeTracker() {
           'Update an employee role',
           'Delete an employee',
           'Exit'
-        ].concat(exitLoop ? ['Back'] : []),
+        ] : [ // Subsequent prompts with the "Back" option
+          'Back', // Add the "Back" option
+          'View all departments',
+          'View all roles',
+          'View all employees',
+          'Add a department',
+          'Add a role',
+          'Add an employee',
+          'Update an employee role',
+          'Delete an employee',
+          'Exit'
+        ],
       });
-  
+
+      if (!isFirstPrompt && action === 'Back') {
+        isFirstPrompt = true; // Reset isFirstPrompt if "Back" is chosen
+        continue; // Skip further processing
+      }
+      
+      // Set isFirstPrompt to false after the initial prompt
+      isFirstPrompt = false;
+
       switch (action) {
         case 'View all departments':
           console.table(await viewAllDepartments());
@@ -145,9 +165,6 @@ async function runEmployeeTracker() {
           break;
         case 'Exit':
           exitLoop = true;
-          break;
-        case 'Back':
-          exitLoop = true; // Exit the current loop iteration to go back
           break;
         default:
           console.log('Invalid action selected');
