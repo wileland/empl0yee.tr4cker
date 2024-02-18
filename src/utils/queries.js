@@ -29,6 +29,10 @@ export const db = {
 
   addDepartment: async (name) => {
     try {
+      if (!name) {
+        throw new Error('Department name cannot be null');
+      }
+
       const query = 'INSERT INTO department (name) VALUES (?)';
       const results = await executeQuery(query, [name]);
       console.log('Department added successfully!');
@@ -143,9 +147,32 @@ export const db = {
       console.error('Error updating employee details:', error);
     }
   },
+};
 
-  // Export other methods...
+export const getRolesForChoices = async () => {
+  try {
+    const roles = await db.select('SELECT id, title FROM role');
+    return roles.map(role => ({
+      name: role.title,
+      value: role.id,
+    }));
+  } catch (error) {
+    console.error('Error fetching roles:', error);
+    return [];
+  }
+};
 
+export const getEmployeesForChoices = async () => {
+  try {
+    const employees = await db.select('SELECT id, CONCAT(first_name, " ", last_name) AS full_name FROM employee');
+    return employees.map(employee => ({
+      name: employee.full_name,
+      value: employee.id,
+    }));
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+    return [];
+  }
 };
 
 export const closePool = async () => {

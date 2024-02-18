@@ -78,11 +78,12 @@ async function runEmployeeTracker() {
           console.table(await viewAllEmployees());
           break;
         case 'Add a department':
-          await addDepartment(await inquirer.prompt({
-            type: 'input',
-            name: 'departmentName',
-            message: 'What is the name of the department?',
-          }).departmentName);
+          const { departmentName } = await inquirer.prompt({
+          type: 'input',
+          name: 'departmentName',
+          message: 'What is the name of the department?',
+          });
+          await addDepartment(departmentName);
           console.log('Department added successfully!');
           break;
         case 'Add a role':

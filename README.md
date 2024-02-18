@@ -4,36 +4,33 @@
 The Employee Tracker is a command-line application built with Node.js, leveraging Inquirer for interactive prompts and MySQL2 for database management. It allows business owners to effectively oversee and manage their company's organizational structure, including departments, roles, and employee data.
 
 ## Table of Contents
- [Description](#i-description)  
- [Getting Started](#ii-getting-started)  
- [Prerequisites](#a-prerequisites)  
- [Installation](#b-installation)  
- [Usage](#iii-usage)  
- [Running the Application](#a-running-the-application)  
- [Functionality](#b-functionality)  
- [Features](#iv-features)  
- [File Directory Structure](#v-file-directory-structure)  
- [Database Schema](#vi-database-schema)  
- [Database Configuration](#vii-database-configuration)  
- [Tests](#viii-tests)  
- [Contributing](#ix-contributing)  
- [License](#x-license)  
- [User Story](#xi-user-story)  
- [Acceptance Criteria](#xii-acceptance-criteria)
+1. [Description](#description)
+2. [Getting Started](#getting-started)
+    -[Prerequisites](#prerequisites)
+    -[Installation](#installation)
+3. [Usage](#usage)
+    -[Running the Application](#running-the-application)
+    -[Functionality](#functionality)
+4. [Features](#features)
+5. [File Directory Structure](#file-directory-structure)
+6. [Database Schema](#database-schema)
+7. [Database Configuration](#database-configuration)
+8. [Tests](#tests)
+9. [Contributing](#contributing)
+10. [License](#license)
+11. [User Story](#user-story)
+12. [Acceptance Criteria](#acceptance-criteria)
 
-## I. Description
-The Employee Tracker is a command-line application built with Node.js, leveraging Inquirer for interactive prompts and MySQL2 for database management. It allows business owners to effectively oversee and manage their company's organizational structure, including departments, roles, and employee data.
+## Getting Started
 
-## II. Getting Started
-
-### A. Prerequisites
+### Prerequisites
 Before using the Employee Tracker, ensure the following are installed:
-- Node.js
-- MySQL
-- Inquirer (for collecting input from the command line)
-- MySQL2 (to connect to your MySQL database)
+- [Node.js](https://nodejs.org/)
+- [MySQL](https://www.mysql.com/)
+- [Inquirer](https://www.npmjs.com/package/inquirer) (for collecting input from the command line)
+- [MySQL2](https://www.npmjs.com/package/mysql2) (to connect to your MySQL database)
 
-### B. Installation
+### Installation
 1. Clone the repository to your local machine:
    ```bash
    git clone <repository-url>
@@ -46,33 +43,33 @@ Before using the Employee Tracker, ensure the following are installed:
 4. Create a MySQL database using the schema provided in `db/schema.sql`.
 5. Configure your database connection details in `config/dbConfig.js` with your personal credentials.
 
-## III. Usage
+## Usage
 
-### A. Running the Application
+### Running the Application
 1. Make sure your MySQL server is running.
 2. Update `config/dbConfig.js` with your MySQL credentials.
 3. Save your changes and start the application:
    ```bash
    npm start
 
-### B. Functionality
+### Functionality
 - **View all departments, roles, and employees**
 - **Add new departments, roles, and employees**
 - **Update existing employee roles**
 - **View employees by department and manager**
 
-## IV. Features
+## Features
 - Interactive command-line interface using Inquirer
 - Robust database management with MySQL2
 - Class-based structure for managing database operations
 - Graceful handling of database connections and shutdown
 
-## V. File Directory Structure
+## File Directory Structure
 Below is the file directory structure of the Employee Tracker App:
 
 ![file structure](image.png)
 
-## VI. Database Schema
+## Database Schema
 The MySQL database schema consists of the following tables:
 
 - `department`: with fields for id, name, and description
@@ -81,26 +78,26 @@ The MySQL database schema consists of the following tables:
 
 Detailed field definitions are included in `db/schema.sql`.
 
-## VII. Database Configuration
+## Database Configuration
 Configure the database connection in `config/dbConfig.js`. Follow the installation guide to set up your environment.
 
-## VIII. Tests
+## Tests
 Run tests to validate the functionalities of the Employee Tracker:
 
 ```bash
 npm test
-## IX. Contributing
+### Contributing
 Community contributions are welcome. For any suggestions or issues, please follow the contribution guidelines provided in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## X. License
+### License
 This project is licensed under the MIT License.
 
-## XI. User Story
+### User Story
 As a business owner,  
 I want to manage the departments, roles, and employees in my company effectively  
 so that I can organize and plan my business efficiently.
 
-## XII. Acceptance Criteria
+### Acceptance Criteria
 Given a command-line application that accepts user input,
 
 When I start the application,  

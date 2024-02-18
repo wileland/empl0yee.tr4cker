@@ -52,8 +52,12 @@ export const viewAllEmployees = async () => {
 
 // Function to add a new department
 export const addDepartment = async (name) => {
+  if (!name) {
+    throw new Error('Department name cannot be null');
+  }
   return await db.execute('INSERT INTO department (name) VALUES (?)', [name]);
 };
+
 
 // Function to add a new role
 export const addRole = async (title, salary, departmentId) => {
