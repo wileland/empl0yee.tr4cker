@@ -2,7 +2,6 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 
-// Initialize environment variables
 dotenv.config();
 
 // Create a connection pool for the MySQL database
@@ -16,8 +15,13 @@ const pool = mysql.createPool({
 
 // A utility function to execute SQL queries with prepared statements
 const executeQuery = async (query, params = []) => {
-  const [results] = await pool.query(query, params);
-  return results;
+  try {
+    const [results] = await pool.query(query, params);
+    return results;
+  } catch (error) {
+    console.error(`Error executing query: ${error.message}`);
+    throw error; // Re-throw the error to be handled by the caller
+  }
 };
 
 // The db object contains methods for interacting with the database
@@ -74,8 +78,9 @@ export const db = {
   close: async () => {
     try {
       await pool.end();
+      console.log('Database connection pool closed.');
     } catch (error) {
-      console.error('Error closing the database connection pool:', error);
+      console.error('Error closing the database pool:', error.message);
     }
   },
 };

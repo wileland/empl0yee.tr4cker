@@ -1,21 +1,12 @@
-import { pool } from './utils/queries';
-
-const executeQuery = async (query, params = []) => {
-  try {
-    const [results] = await pool.query(query, params);
-    return results;
-  } catch (error) {
-    console.error(`Error executing query: ${error.message}`);
-    throw error;
-  }
-};
+// dbFunctions.js
+import { db } from './queries.js'; // Import required functions from queries.js
 
 const viewDepartments = async () => {
   try {
-    const [rows] = await executeQuery('SELECT * FROM department ORDER BY id');
-    console.table(rows);
+    const departments = await db.select('SELECT * FROM department ORDER BY id');
+    console.table(departments);
   } catch (error) {
-    console.error(`Error viewing departments: ${error}`);
+    console.error(`Error viewing departments: ${error.message}`);
   }
 };
 
@@ -27,23 +18,17 @@ const viewRoles = async () => {
       INNER JOIN department ON role.department_id = department.id
       ORDER BY role.id
     `;
-    const [rows] = await executeQuery(query);
-    console.table(rows);
+    const roles = await db.select(query);
+    console.table(roles);
   } catch (error) {
-    console.error(`Error viewing roles: ${error}`);
+    console.error(`Error viewing roles: ${error.message}`);
   }
 };
 
-// Define other functions similarly...
-
-const closeConnection = () => {
-  pool.end();
-  console.log('Database pool closed.');
-};
+// Define other functions similarly using the `db` object from queries.js
 
 export {
   viewDepartments,
   viewRoles,
   // Export other functions here...
-  closeConnection,
 };
