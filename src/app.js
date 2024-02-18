@@ -1,9 +1,9 @@
 // ES6 import statements
 import dotenv from 'dotenv';
 import inquirer from 'inquirer';
-import cTable from 'console.table';
 import express from 'express';
-import { db, closePool } from './utils/queries.js'; // Assuming you export closePool for closing the connection
+import { db, closePool } from './utils/queries.js'; // Assuming closePool is correctly exported for closing the connection
+import { viewAllDepartments, viewAllRoles, viewAllEmployees, addDepartment, addRole, addEmployee, updateEmployeeRole } from './utils/dbFunctions.js';
 
 dotenv.config();
 
@@ -22,25 +22,50 @@ async function runEmployeeTracker() {
       message: 'What would you like to do?',
       choices: [
         'View all departments',
-        'Exit',
-        // Add other options here
+        'View all roles',
+        'View all employees',
+        'Add a department',
+        'Add a role',
+        'Add an employee',
+        'Update an employee role',
+        'Exit'
       ],
     });
 
-    switch (action) {
-      case 'View all departments':
-        try {
-          const departments = await db.select('SELECT * FROM department');
+    try {
+      switch (action) {
+        case 'View all departments':
+          const departments = await viewAllDepartments();
           console.table(departments);
-        } catch (error) {
-          console.error('Error viewing departments:', error);
-        }
-        break;
-      case 'Exit':
-        exitLoop = true;
-        break;
-      default:
-        console.log('Invalid action selected');
+          break;
+        case 'View all roles':
+          const roles = await viewAllRoles();
+          console.table(roles);
+          break;
+        case 'View all employees':
+          const employees = await viewAllEmployees();
+          console.table(employees);
+          break;
+        case 'Add a department':
+          // Implementation for adding a department
+          break;
+        case 'Add a role':
+          // Implementation for adding a role
+          break;
+        case 'Add an employee':
+          // Implementation for adding an employee
+          break;
+        case 'Update an employee role':
+          // Implementation for updating an employee's role
+          break;
+        case 'Exit':
+          exitLoop = true;
+          break;
+        default:
+          console.log('Invalid action selected');
+      }
+    } catch (error) {
+      console.error('Error:', error);
     }
   }
 
@@ -58,8 +83,6 @@ app.get('/api/departments', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
-
-// Additional routes for roles, employees, etc., should be defined here
 
 // Function to start the Express server and the CLI application
 async function main() {
@@ -81,6 +104,6 @@ main().catch((error) => {
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\nGracefully shutting down...');
-  await closePool(); // Ensure this function exists in queries.js and closes the pool properly
+  await closePool();
   process.exit(0);
 });
