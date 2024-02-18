@@ -2,8 +2,19 @@
 import dotenv from 'dotenv';
 import inquirer from 'inquirer';
 import express from 'express';
-import { db, closePool } from './utils/queries.js'; // Assuming closePool is correctly exported for closing the connection
-import { viewAllDepartments, viewAllRoles, viewAllEmployees, addDepartment, addRole, addEmployee, updateEmployeeRole } from './utils/dbFunctions.js';
+import { db, closePool } from './utils/queries.js';
+import {
+  viewAllDepartments,
+  viewAllRoles,
+  viewAllEmployees,
+  addDepartment,
+  addRole,
+  addEmployee,
+  updateEmployeeRole,
+  getDepartmentsForChoices,
+  getRolesForChoices,
+  getEmployeesForChoices
+} from './dbFunctions.js'; 
 
 dotenv.config();
 
@@ -47,16 +58,79 @@ async function runEmployeeTracker() {
           console.table(employees);
           break;
         case 'Add a department':
-          // Implementation for adding a department
+          const { departmentName } = await inquirer.prompt({
+            type: 'input',
+            name: 'departmentName',
+            message: 'What is the name of the department?',
+          });
+          await addDepartment(departmentName);
+          console.log('Department added successfully!');
           break;
         case 'Add a role':
-          // Implementation for adding a role
+          const roleDetails = await inquirer.prompt([
+            {
+              type: 'input',
+              name: 'title',
+              message: 'What is the name of the role?',
+            },
+            {
+              type: 'input',
+              name: 'salary',
+              message: 'What is the salary of the role?',
+            },
+            {
+              type: 'list',
+              name: 'departmentId',
+              message: 'Which department does the role belong to?',
+              choices: await getDepartmentsForChoices(),
+            },
+          ]);
+          await addRole(roleDetails.title, roleDetails.salary, roleDetails.departmentId);
+          console.log('Role added successfully!');
           break;
         case 'Add an employee':
-          // Implementation for adding an employee
+          const employeeDetails = await inquirer.prompt([
+            {
+              type: 'input',
+              name: 'firstName',
+              message: "What is the employee's first name?",
+            },
+            {
+              type: 'input',
+              name: 'lastName',
+              message: "What is the employee's last name?",
+            },
+            {
+              type: 'list',
+              name: 'roleId',
+              message: "What is the employee's role?",
+              choices: await getRolesForChoices(),
+            },
+            {
+              type: 'list',
+              name: 'managerId',
+              message: "Who is the employee's manager?",
+              choices: await getEmployeesForChoices(),
+            },
+          ]);
+          await addEmployee(employeeDetails.firstName, employeeDetails.lastName, employeeDetails.roleId, employeeDetails.managerId);
+          console.log('Employee added successfully!');
           break;
         case 'Update an employee role':
-          // Implementation for updating an employee's role
+          const { employeeId } = await inquirer.prompt({
+            type: 'list',
+            name: 'employeeId',
+            message: 'Which employee do you want to update?',
+            choices: await getEmployeesForChoices(),
+          });
+          const { newRoleId } = await inquirer.prompt({
+            type: 'list',
+            name: 'newRoleId',
+            message: 'Which role do you want to assign to the selected employee?',
+            choices: await getRolesForChoices(),
+          });
+          await updateEmployeeRole(employeeId, newRoleId);
+          console.log('Employee role updated successfully!');
           break;
         case 'Exit':
           exitLoop = true;

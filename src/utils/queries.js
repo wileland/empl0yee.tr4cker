@@ -1,11 +1,11 @@
 // queries.js
-import mysql from 'mysql2/promise';
+import { createPool } from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 // Create a connection pool for the MySQL database
-const pool = mysql.createPool({
+const pool = createPool({
   connectionLimit: 10,
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -73,14 +73,14 @@ export const db = {
     const results = await executeQuery(query, [firstName, lastName, managerId, employeeId]);
     return results.affectedRows > 0;
   },
+};
 
-  // A method to close the database connection pool
-  close: async () => {
-    try {
-      await pool.end();
-      console.log('Database connection pool closed.');
-    } catch (error) {
-      console.error('Error closing the database pool:', error.message);
-    }
-  },
+// Export the close function to close the database connection pool
+export const closePool = async () => {
+  try {
+    await pool.end();
+    console.log('Database connection pool closed.');
+  } catch (error) {
+    console.error('Error closing the database pool:', error.message);
+  }
 };

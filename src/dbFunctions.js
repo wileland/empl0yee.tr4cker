@@ -1,5 +1,32 @@
 // dbFunctions.js
-import { db } from './queries.js'; // Import the db object from queries.js
+import { db } from './utils/queries.js'; // Import the db object from queries.js
+
+// Function to get department choices
+export const getDepartmentsForChoices = async () => {
+  const departments = await viewAllDepartments(); // Assuming you have implemented the viewAllDepartments function
+  return departments.map((department) => ({
+    name: department.name,
+    value: department.id,
+  }));
+};
+
+// Function to get employee choices
+export const getEmployeesForChoices = async () => {
+  const employees = await viewAllEmployees(); // Assuming you have implemented the viewAllEmployees function
+  return employees.map((employee) => ({
+    name: `${employee.first_name} ${employee.last_name}`,
+    value: employee.id,
+  }));
+};
+
+// Function to get role choices
+export const getRolesForChoices = async () => {
+  const roles = await viewAllRoles(); // Assuming you have implemented the viewAllRoles function
+  return roles.map((role) => ({
+    name: role.title,
+    value: role.id,
+  }));
+};
 
 // Function to view all departments
 export const viewAllDepartments = async () => {
