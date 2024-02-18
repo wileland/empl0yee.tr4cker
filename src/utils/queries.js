@@ -1,18 +1,15 @@
-// Using ES6 import syntax
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Create a connection pool to the MySQL database using the environment variables
 const pool = mysql.createPool({
-  connectionLimit: 10, // Adjust the limit as needed
+  connectionLimit: 10,
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
 });
 
-// A utility function for executing SQL queries with parameters
 const executeQuery = async (query, params = []) => {
   try {
     const [results] = await pool.query(query, params);
@@ -23,7 +20,6 @@ const executeQuery = async (query, params = []) => {
   }
 };
 
-// Exporting the functions as an object to keep the structure similar to original
 export const db = {
   select: executeQuery,
   execute: executeQuery,
@@ -61,13 +57,3 @@ export const db = {
     await pool.end();
   }
 };
-
-// Example usage (commented out to prevent execution here)
-// (async () => {
-//   try {
-//     const departments = await db.select('SELECT * FROM department ORDER BY id');
-//     console.table(departments);
-//   } catch (error) {
-//     console.error('Error viewing departments:', error);
-//   }
-// })();

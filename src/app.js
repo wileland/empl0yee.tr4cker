@@ -1,39 +1,23 @@
-require('dotenv').config();
-const inquirer = require('inquirer');
-const cTable = require('console.table');
-const express = require('express');
-const mysql = require('mysql2');
-const dbFunctions = require('./dbFunctions'); // Ensure this module has all the required functions
-const db = require('./queries'); // Adjust the path as needed
-
-// Set up the MySQL connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+import 'dotenv/config';
+import express from 'express';
+import { json } from 'express';
+import inquirer from 'inquirer';
+import cTable from 'console.table';
+import { pool } from './dbFunctions'; // Ensure this module exports the pool
+import * as db from './queries'; // Adjust the path as needed
 
 const app = express();
-app.use(express.json());
+app.use(json());
 
 const PORT = process.env.PORT || 3000;
 
 // Function to obtain a database connection
-async function getConnection() {
-  return pool.promise().getConnection();
-}
+const getConnection = async () => pool.promise().getConnection();
 
 // Function to start the CLI application
-async function runEmployeeTracker(connection) {
-  // Your CLI application logic goes here
+const runEmployeeTracker = async (connection) => {
   let exitLoop = false;
   while (!exitLoop) {
-    // Use inquirer to get the user's action choice
     const { action } = await inquirer.prompt([
       {
         type: 'list',
@@ -48,9 +32,8 @@ async function runEmployeeTracker(connection) {
     ]);
 
     switch (action) {
-      // Match the case with the user's choice and call the respective dbFunctions
       case 'View all departments':
-        const departments = await dbFunctions.viewDepartments(connection);
+        const departments = await db.viewDepartments(connection);
         console.table(departments);
         break;
       // Add cases for all other actions here
@@ -60,13 +43,13 @@ async function runEmployeeTracker(connection) {
     }
   }
   await closeConnection(connection); // Close connection when the user decides to exit
-}
+};
 
 // Express API routes
 app.get('/api/departments', async (req, res) => {
   const connection = await getConnection();
   try {
-    const departments = await dbFunctions.viewDepartments(connection);
+    const departments = await db.viewDepartments(connection);
     res.json(departments);
   } catch (error) {
     res.status(500).send('Server Error');
@@ -79,7 +62,7 @@ app.get('/api/departments', async (req, res) => {
 app.get('/api/roles', async (req, res) => {
   const connection = await getConnection();
   try {
-    const roles = await dbFunctions.viewRoles(connection);
+    const roles = await db.viewRoles(connection);
     res.json(roles);
   } catch (error) {
     res.status(500).send('Server Error');
@@ -88,101 +71,17 @@ app.get('/api/roles', async (req, res) => {
   }
 });
 
-app.get('/api/employees', async (req, res) => {
-  const connection = await getConnection();
-  try {
-    const employees = await dbFunctions.viewEmployees(connection);
-    res.json(employees);
-  } catch (error) {
-    res.status(500).send('Server Error');
-  } finally {
-    connection.release();
-  }
-});
-
-app.put('/api/employees/:id/role', async (req, res) => {
-  const { id } = req.params;
-  const { roleId } = req.body; // Expecting { roleId: newRoleId }
-  const connection = await getConnection();
-  try {
-    await dbFunctions.updateEmployeeRole(id, roleId, connection);
-    res.send('Employee role updated successfully');
-  } catch (error) {
-    res.status(500).send('Server Error');
-  } finally {
-    connection.release();
-  }
-});
-
-app.put('/api/employees/:id', async (req, res) => {
-  const { id } = req.params;
-  const { firstName, lastName, managerId } = req.body;
-  const connection = await getConnection();
-  try {
-    await dbFunctions.updateEmployeeDetails(id, firstName, lastName, managerId, connection);
-    res.send('Employee details updated successfully');
-  } catch (error) {
-    res.status(500).send('Server Error');
-  } finally {
-    connection.release();
-  }
-});
-
-app.delete('/api/employees/:id', async (req, res) => {
-  const { id } = req.params;
-  const connection = await getConnection();
-  try {
-    await dbFunctions.deleteEmployee(id, connection);
-    res.send('Employee deleted successfully');
-  } catch (error) {
-    res.status(500).send('Server Error');
-  } finally {
-    connection.release();
-  }
-});
-
-// Create routes for creating departments, roles, and employees
-app.post('/api/departments', async (req, res) => {
-  // Implement the logic to create a new department
-  try {
-    // Your code to create a new department goes here
-    res.send('Department created successfully');
-  } catch (error) {
-    res.status(500).send('Server Error');
-  }
-});
-
-app.post('/api/roles', async (req, res) => {
-  // Implement the logic to create a new role
-  try {
-    // Your code to create a new role goes here
-    res.send('Role created successfully');
-  } catch (error) {
-    res.status(500).send('Server Error');
-  }
-});
-
-app.post('/api/employees', async (req, res) => {
-  // Implement the logic to create a new employee
-  try {
-    // Your code to create a new employee goes here
-    res.send('Employee created successfully');
-  } catch (error) {
-    res.status(500).send('Server Error');
-  }
-});
-
-// ... Include other routes as needed for create operations ...
+// Add other routes...
 
 // Function to close the database connection
-async function closeConnection(connection) {
+const closeConnection = async (connection) => {
   try {
     await connection.release();
     console.log('Connection released and database pool is still active.');
   } catch (error) {
     console.error('Error releasing the connection:', error);
   }
-}
+};
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
@@ -195,7 +94,7 @@ process.on('SIGINT', async () => {
 });
 
 // Main function to start the application
-async function main() {
+const main = async () => {
   try {
     const connection = await db.pool.getConnection();
 
@@ -209,6 +108,6 @@ async function main() {
   } catch (error) {
     console.error('Error obtaining database connection:', error);
   }
-}
+};
 
 main().catch(console.error);
