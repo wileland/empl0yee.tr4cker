@@ -1,113 +1,86 @@
-import 'dotenv/config';
-import express from 'express';
-import { json } from 'express';
+// ES6 import statements
+import dotenv from 'dotenv';
 import inquirer from 'inquirer';
 import cTable from 'console.table';
-import { pool } from './dbFunctions'; // Ensure this module exports the pool
-import * as db from './queries'; // Adjust the path as needed
+import express from 'express';
+import { db, closePool } from './utils/queries.js'; // Assuming you export closePool for closing the connection
+
+dotenv.config();
 
 const app = express();
-app.use(json());
+app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// Function to obtain a database connection
-const getConnection = async () => pool.promise().getConnection();
-
-// Function to start the CLI application
-const runEmployeeTracker = async (connection) => {
+// Main CLI function
+async function runEmployeeTracker() {
   let exitLoop = false;
   while (!exitLoop) {
-    const { action } = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'action',
-        message: 'What would you like to do?',
-        choices: [
-          'View all departments',
-          // Add all other actions here
-          'Exit',
-        ],
-      },
-    ]);
+    const { action } = await inquirer.prompt({
+      type: 'list',
+      name: 'action',
+      message: 'What would you like to do?',
+      choices: [
+        'View all departments',
+        'Exit',
+        // Add other options here
+      ],
+    });
 
     switch (action) {
       case 'View all departments':
-        const departments = await db.viewDepartments(connection);
-        console.table(departments);
+        try {
+          const departments = await db.select('SELECT * FROM department');
+          console.table(departments);
+        } catch (error) {
+          console.error('Error viewing departments:', error);
+        }
         break;
-      // Add cases for all other actions here
       case 'Exit':
         exitLoop = true;
         break;
+      default:
+        console.log('Invalid action selected');
     }
   }
-  await closeConnection(connection); // Close connection when the user decides to exit
-};
 
-// Express API routes
+  // Close the pool and exit the application after the loop ends
+  await closePool();
+  console.log('Application exited successfully.');
+}
+
+// Define Express routes
 app.get('/api/departments', async (req, res) => {
-  const connection = await getConnection();
   try {
-    const departments = await db.viewDepartments(connection);
+    const departments = await db.select('SELECT * FROM department');
     res.json(departments);
   } catch (error) {
     res.status(500).send('Server Error');
-  } finally {
-    connection.release();
   }
 });
 
-// Additional Express routes
-app.get('/api/roles', async (req, res) => {
-  const connection = await getConnection();
-  try {
-    const roles = await db.viewRoles(connection);
-    res.json(roles);
-  } catch (error) {
-    res.status(500).send('Server Error');
-  } finally {
-    connection.release();
-  }
+// Additional routes for roles, employees, etc., should be defined here
+
+// Function to start the Express server and the CLI application
+async function main() {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+
+  // Start the CLI after the server is up and running
+  runEmployeeTracker().catch((error) => {
+    console.error('Error in runEmployeeTracker:', error);
+    process.exit(1);
+  });
+}
+
+main().catch((error) => {
+  console.error('Error in main function:', error);
 });
-
-// Add other routes...
-
-// Function to close the database connection
-const closeConnection = async (connection) => {
-  try {
-    await connection.release();
-    console.log('Connection released and database pool is still active.');
-  } catch (error) {
-    console.error('Error releasing the connection:', error);
-  }
-};
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\nGracefully shutting down...');
-  await pool.end();
-  app.close(() => {
-    console.log('Express server terminated');
-    process.exit(0);
-  });
+  await closePool(); // Ensure this function exists in queries.js and closes the pool properly
+  process.exit(0);
 });
-
-// Main function to start the application
-const main = async () => {
-  try {
-    const connection = await db.pool.getConnection();
-
-    // Run the CLI application
-    await runEmployeeTracker(connection);
-
-    // Start the Express server
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Error obtaining database connection:', error);
-  }
-};
-
-main().catch(console.error);

@@ -1,32 +1,35 @@
--- seeds.sql
--- Seed data for the Employee Tracker application
-
 -- Start transaction
 START TRANSACTION;
 
--- Inserting sample data into the department table
-INSERT INTO department (id, name, description) VALUES
-(1, 'Engineering', 'Software development and IT support'),
-(2, 'Human Resources', 'Employee relations, recruiting, and benefits'),
-(3, 'Finance', 'Accounting, budgeting, and financial planning'),
-(4, 'Marketing', 'Sales, marketing, and advertising');
+-- Clear existing data from the employee table
+DELETE FROM employee;
 
--- Inserting sample data into the role table
--- The department_id is set explicitly based on the known IDs from the department insertions
-INSERT INTO role (title, salary, department_id, required_skills) VALUES
-('Software Engineer', 70000, 1, 'Java, Python, C++'),
-('HR Manager', 65000, 2, 'Recruiting, employee relations, benefits administration'),
-('Accountant', 55000, 3, 'Accounting software, financial reporting, budgeting'),
-('Marketing Coordinator', 48000, 4, 'Social media marketing, email marketing, content creation');
+-- Clear existing data from the role table
+DELETE FROM role;
 
--- Inserting sample data into the employee table
--- For simplicity, manager_id is set to NULL for now
--- The hire_date is set to a fixed date for sample purposes
-INSERT INTO employee (first_name, last_name, role_id, manager_id, hire_date) VALUES
-('John', 'Doe', 1, NULL, '2023-08-08'),
-('Jane', 'Smith', 2, NULL, '2023-08-08'),
-('Emily', 'Johnson', 3, NULL, '2023-08-08'),
-('Michael', 'Brown', 4, NULL, '2023-08-08');
+-- Clear existing data from the department table
+DELETE FROM department;
+
+-- Insert sample data into the department table
+INSERT INTO department (id, name) VALUES
+(1, 'Engineering'),
+(2, 'Human Resources'),
+(3, 'Finance'),
+(4, 'Marketing');
+
+-- Insert sample data into the role table
+INSERT INTO role (id, title, salary, department_id) VALUES
+(1, 'Software Engineer', 70000, 1),
+(2, 'HR Manager', 65000, 2),
+(3, 'Accountant', 55000, 3),
+(4, 'Marketing Coordinator', 48000, 4);
+
+-- Insert sample data into the employee table
+INSERT INTO employee (id, first_name, last_name, role_id, manager_id) VALUES
+(1, 'John', 'Doe', 1, NULL),
+(2, 'Jane', 'Smith', 2, NULL),
+(3, 'Emily', 'Johnson', 3, NULL),
+(4, 'Michael', 'Brown', 4, NULL);
 
 -- Commit transaction
 COMMIT;

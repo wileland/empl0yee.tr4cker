@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "NODE_ENV=test jest"
+    "test": "NODE_ENV=test jest",
+    "seed": "mysql -u root -p empl0yee_tr4cker_db < db/seeds.sql"
   },
   "author": "William Haynes",
   "license": "MIT",
