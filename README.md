@@ -75,30 +75,34 @@ Below is the file directory structure of the empl0yee tr4cker App:
 
 lua
 Copy code
-empl0yee_tr4cker/
-├── config/
-│   └── dbConfig.js
-├── db/
+EMPLOYEE.TR4CKER
+├── db
 │   ├── schema.sql
 │   └── seeds.sql
-├── lib/
-│   ├── Department.js
-│   ├── Employee.js
-│   └── Role.js
-├── node_modules/
-├── tests/
+├── node_modules
+├── src
+│   ├── lib
+│   │   ├── Department.js
+│   │   ├── Employee.js
+│   │   └── Role.js
+│   └── utils
+│       ├── queries.js
+│       ├── app.js
+│       ├── db.js
+│       └── dbFunctions.js
+├── tests
 │   ├── department.test.js
 │   ├── employee.test.js
 │   ├── index.test.js
 │   └── role.test.js
-├── utils/
-│   └── queries.js
 ├── .gitignore
-├── index.js
 ├── jest.config.js
+├── LICENSE
+├── mock_database.sql
 ├── package-lock.json
 ├── package.json
 └── README.md
+
 Database Schema
 The MySQL database schema consists of the following tables:
 
