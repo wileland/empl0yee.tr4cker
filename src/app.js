@@ -11,6 +11,7 @@ import {
   addRole,
   addEmployee,
   updateEmployeeRole,
+  deleteEmployee, // Import the deleteEmployee function
   getDepartmentsForChoices,
   getRolesForChoices,
   getEmployeesForChoices
@@ -31,6 +32,7 @@ async function runEmployeeTracker() {
       type: 'list',
       name: 'action',
       message: 'What would you like to do?',
+      loop: false, // Disable the loop behavior
       choices: [
         'View all departments',
         'View all roles',
@@ -39,6 +41,7 @@ async function runEmployeeTracker() {
         'Add a role',
         'Add an employee',
         'Update an employee role',
+        'Delete an employee',
         'Exit'
       ],
     });
@@ -131,6 +134,16 @@ async function runEmployeeTracker() {
           });
           await updateEmployeeRole(employeeId, newRoleId);
           console.log('Employee role updated successfully!');
+          break;
+        case 'Delete an employee': // Handle the action to delete an employee
+          const { employeeIdToDelete } = await inquirer.prompt({
+            type: 'list',
+            name: 'employeeIdToDelete',
+            message: 'Which employee do you want to delete?',
+            choices: await getEmployeesForChoices(),
+          });
+          await deleteEmployee(employeeIdToDelete);
+          console.log('Employee deleted successfully!');
           break;
         case 'Exit':
           exitLoop = true;

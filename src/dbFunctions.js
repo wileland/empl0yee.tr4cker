@@ -70,4 +70,7 @@ export const updateEmployeeRole = async (employeeId, roleId) => {
   return await db.execute('UPDATE employee SET role_id = ? WHERE id = ?', [roleId, employeeId]);
 };
 
-// Export functions as needed...
+// Function to delete an employee
+export const deleteEmployee = async (employeeId) => {
+  return await db.execute('DELETE FROM employee WHERE id = ?', [employeeId]);
+};
